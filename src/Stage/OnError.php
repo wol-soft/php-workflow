@@ -16,7 +16,6 @@ class OnError extends Stage
         AllowNextAfter,
         AllowNextExecuteWorkflow;
 
-    /** @var callable[] */
     private array $onError = [];
 
     public function onError(string $description, callable $onError): self

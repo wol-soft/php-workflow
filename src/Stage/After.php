@@ -11,12 +11,11 @@ class After extends Stage
 {
     use AllowNextExecuteWorkflow;
 
-    /** @var callable[] */
     private array $after = [];
 
-    public function after(callable $after): self
+    public function after(string $description, callable $after): self
     {
-        $this->after[] = $after;
+        $this->after[] = [$description, $after];
         return $this;
     }
 
@@ -24,8 +23,8 @@ class After extends Stage
     {
         $workflowState->setStage(WorkflowState::STAGE_AFTER);
 
-        foreach ($this->after as $after) {
-            $this->wrapStepExecution($after, $workflowState);
+        foreach ($this->after as [$description, $after]) {
+            $this->wrapStepExecution($description, $after, $workflowState);
         }
 
         $this->next($workflowState);

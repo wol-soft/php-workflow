@@ -6,14 +6,13 @@ namespace PHPWorkflow;
 
 class Validator
 {
-    /**
-     * @var callable
-     */
+    private string $description;
     private $validator;
     private bool $hardValidator;
 
-    public function __construct(callable $validator, bool $hardValidator)
+    public function __construct(string $description, callable $validator, bool $hardValidator)
     {
+        $this->description = $description;
         $this->validator = $validator;
         $this->hardValidator = $hardValidator;
     }
@@ -26,5 +25,10 @@ class Validator
     public function isHardValidator(): bool
     {
         return $this->hardValidator;
+    }
+
+    public function getDescription(): string
+    {
+        return $this->description;
     }
 }

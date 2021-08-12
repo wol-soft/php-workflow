@@ -9,8 +9,8 @@ use PHPWorkflow\Stage\Process;
 
 trait AllowNextProcess
 {
-    public function process(callable $process): AfterProcess
+    public function process(string $description, callable $process): AfterProcess
     {
-        return $this->next = (new Process($this->workflow))->process($process);
+        return $this->next = (new Process($this->workflow))->process($description, $process);
     }
 }

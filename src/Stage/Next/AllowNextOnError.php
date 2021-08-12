@@ -8,8 +8,8 @@ use PHPWorkflow\Stage\OnError;
 
 trait AllowNextOnError
 {
-    public function onError(callable $onError): OnError
+    public function onError(string $description, callable $onError): OnError
     {
-        return $this->next = (new OnError($this->workflow))->onError($onError);
+        return $this->next = (new OnError($this->workflow))->onError($description, $onError);
     }
 }

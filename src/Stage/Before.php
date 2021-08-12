@@ -11,12 +11,11 @@ class Before extends Stage
 {
     use AllowNextProcess;
 
-    /** @var callable[] */
     private array $before = [];
 
-    public function before(callable $before): self
+    public function before(string $description, callable $before): self
     {
-        $this->before[] = $before;
+        $this->before[] = [$description, $before];
         return $this;
     }
 
@@ -24,8 +23,8 @@ class Before extends Stage
     {
         $workflowState->setStage(WorkflowState::STAGE_BEFORE);
 
-        foreach ($this->before as $before) {
-            $this->wrapStepExecution($before, $workflowState);
+        foreach ($this->before as [$description, $before]) {
+            $this->wrapStepExecution($description, $before, $workflowState);
         }
 
         $this->next($workflowState);

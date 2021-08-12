@@ -16,12 +16,11 @@ class OnSuccess extends Stage
         AllowNextAfter,
         AllowNextExecuteWorkflow;
 
-    /** @var callable[] */
     private array $onSuccess = [];
 
-    public function onSuccess(callable $onSuccess): self
+    public function onSuccess(string $description, callable $onSuccess): self
     {
-        $this->onSuccess[] = $onSuccess;
+        $this->onSuccess[] = [$description, $onSuccess];
         return $this;
     }
 
@@ -29,8 +28,8 @@ class OnSuccess extends Stage
     {
         $workflowState->setStage(WorkflowState::STAGE_ON_SUCCESS);
 
-        foreach ($this->onSuccess as $onSuccess) {
-            $this->wrapStepExecution($onSuccess, $workflowState);
+        foreach ($this->onSuccess as [$description, $onSuccess]) {
+            $this->wrapStepExecution($description, $onSuccess, $workflowState);
         }
 
         $this->next($workflowState);

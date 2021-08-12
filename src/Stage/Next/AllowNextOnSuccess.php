@@ -8,8 +8,8 @@ use PHPWorkflow\Stage\OnSuccess;
 
 trait AllowNextOnSuccess
 {
-    public function onSuccess(callable $onSuccess): OnSuccess
+    public function onSuccess(string $description, callable $onSuccess): OnSuccess
     {
-        return $this->next = (new OnSuccess($this->workflow))->onSuccess($onSuccess);
+        return $this->next = (new OnSuccess($this->workflow))->onSuccess($description, $onSuccess);
     }
 }

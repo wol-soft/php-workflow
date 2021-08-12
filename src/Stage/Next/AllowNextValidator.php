@@ -8,8 +8,8 @@ use PHPWorkflow\Stage\Validation;
 
 trait AllowNextValidator
 {
-    public function validate(callable $validator, bool $hardValidator = false): Validation
+    public function validate(string $description, callable $validator, bool $hardValidator = false): Validation
     {
-        return $this->next = (new Validation($this->workflow))->validate($validator, $hardValidator);
+        return $this->next = (new Validation($this->workflow))->validate($description, $validator, $hardValidator);
     }
 }

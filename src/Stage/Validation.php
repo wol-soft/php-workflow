@@ -20,9 +20,9 @@ class Validation extends Stage
     /** @var Validator[] */
     private array $validators = [];
 
-    public function validate(callable $validator, bool $hardValidator = false): self
+    public function validate(string $description, callable $validator, bool $hardValidator = false): self
     {
-        $this->validators[] = new Validator($validator, $hardValidator);
+        $this->validators[] = new Validator($description, $validator, $hardValidator);
         return $this;
     }
 
@@ -40,12 +40,12 @@ class Validation extends Stage
 
         foreach ($this->validators as $validator) {
             if ($validator->isHardValidator()) {
-                $this->wrapStepExecution($validator->getValidator(), $workflowState);
+                $this->wrapStepExecution($validator->getDescription(), $validator->getValidator(), $workflowState);
             } else {
                 $validationErrors = [];
 
                 try {
-                    $this->wrapStepExecution($validator->getValidator(), $workflowState);
+                    $this->wrapStepExecution($validator->getDescription(), $validator->getValidator(), $workflowState);
                 } catch (Exception $exception) {
                     $validationErrors[] = $exception;
                 }

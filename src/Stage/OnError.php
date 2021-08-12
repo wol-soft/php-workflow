@@ -26,6 +26,11 @@ class OnError extends Stage
 
     protected function run(WorkflowState $workflowState): void
     {
+        // don't execute onError steps if the workflow was successful
+        if (!$workflowState->getProcessException()) {
+            $this->next($workflowState);
+        }
+
         $workflowState->setStage(WorkflowState::STAGE_ON_ERROR);
 
         foreach ($this->onError as [$description, $onError]) {

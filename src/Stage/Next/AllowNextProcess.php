@@ -11,6 +11,8 @@ trait AllowNextProcess
 {
     public function process(string $description, callable $process): AfterProcess
     {
-        return $this->next = (new Process($this->workflow))->process($description, $process);
+        $this->next = (new Process($this->workflow))->process($description, $process);
+
+        return $this->next->getAfterProcess();
     }
 }

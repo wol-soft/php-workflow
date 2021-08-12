@@ -10,13 +10,12 @@ use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
 use PHPWorkflow\State\WorkflowResult;
 use PHPWorkflow\State\WorkflowState;
-use PHPWorkflow\WorkflowControl;
 
 trait AllowNextExecuteWorkflow
 {
     public function executeWorkflow(bool $throwOnFailure = true): WorkflowResult
     {
-        $workflowState = new WorkflowState(new WorkflowControl());
+        $workflowState = new WorkflowState();
 
         try {
             $this->workflow->run($workflowState);

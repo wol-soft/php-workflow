@@ -25,10 +25,10 @@ class WorkflowState
     private ExecutionLog $executionLog;
     private string $workflowName;
 
-    public function __construct(WorkflowControl $workflowControl)
+    public function __construct()
     {
-        $this->workflowControl = $workflowControl;
         $this->executionLog = new ExecutionLog();
+        $this->workflowControl = new WorkflowControl($this->executionLog);
     }
 
     public function getProcessException(): ?Exception

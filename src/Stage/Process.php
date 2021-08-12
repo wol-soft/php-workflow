@@ -11,15 +11,21 @@ class Process extends Stage
 {
     private $process;
 
-    public function process(string $description, callable $process): AfterProcess
+    public function process(string $description, callable $process): Process
     {
         if ($this->process) {
             throw new Exception('Process already attached');
         }
 
         $this->process = [$description, $process];
+        $this->next = new AfterProcess($this->workflow);
 
-        return $this->next = new AfterProcess($this->workflow);
+        return $this;
+    }
+
+    public function getAfterProcess(): AfterProcess
+    {
+        return $this->next;
     }
 
     protected function run(WorkflowState $workflowState): void

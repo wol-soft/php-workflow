@@ -14,11 +14,14 @@ class ExecutionLog
 
     /** @var Step[][] */
     private array $stages = [];
+    /** @var string[] Collect additional debug info concerning the current step */
+    private array $stepInfo = [];
 
     public function addStep(int $stage, string $step, string $state, ?string $reason): void {
         $stage = $this->mapStage($stage);
 
-        $this->stages[$stage][] = new Step($step, $state, $reason);
+        $this->stages[$stage][] = new Step($step, $state, $reason, $this->stepInfo);
+        $this->stepInfo = [];
     }
 
     public function __toString(): string
@@ -34,6 +37,11 @@ class ExecutionLog
         }
 
         return trim($debug);
+    }
+
+    public function attachStepInfo(string $info): void
+    {
+        $this->stepInfo[] = $info;
     }
 
     private function mapStage(int $stage): string

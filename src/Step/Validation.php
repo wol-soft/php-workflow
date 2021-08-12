@@ -6,6 +6,7 @@ namespace PHPWorkflow\Step;
 
 use Exception;
 use PHPWorkflow\Exception\WorkflowValidationException;
+use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Step\Next\AllowNextBefore;
 use PHPWorkflow\Step\Next\AllowNextProcess;
 use PHPWorkflow\Validator;
@@ -25,8 +26,10 @@ class Validation extends Step
         return $this;
     }
 
-    protected function run(): void
+    protected function run(WorkflowState $workflowState): void
     {
+        $workflowState->setStage(WorkflowState::STAGE_VALIDATION);
+
         // make sure hard validators are executed first
         usort($this->validators, function (Validator $validator, Validator $comparedValidator): int {
             if ($validator->isHardValidator() xor $comparedValidator->isHardValidator()) {
@@ -37,12 +40,12 @@ class Validation extends Step
 
         foreach ($this->validators as $validator) {
             if ($validator->isHardValidator()) {
-                ($validator->getValidator())();
+                $this->wrapStepExecution($validator->getValidator(), $workflowState);
             } else {
                 $validationErrors = [];
 
                 try {
-                    ($validator->getValidator())();
+                    $this->wrapStepExecution($validator->getValidator(), $workflowState);
                 } catch (Exception $exception) {
                     $validationErrors[] = $exception;
                 }
@@ -53,6 +56,6 @@ class Validation extends Step
             }
         }
 
-        $this->next();
+        $this->next($workflowState);
     }
 }

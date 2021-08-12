@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PHPWorkflow\Step;
 
 use Exception;
+use PHPWorkflow\State\WorkflowState;
 
 class Process extends Step
 {
@@ -22,12 +23,16 @@ class Process extends Step
         return $this->next = new AfterProcess($this->workflow);
     }
 
-    protected function run(): void
+    protected function run(WorkflowState $workflowState): void
     {
-        foreach ($this->process as $process) {
-            ($process)();
+        $workflowState->setStage(WorkflowState::STAGE_PROCESS);
+
+        try {
+            $this->wrapStepExecution($this->process, $workflowState);
+        } catch (Exception $exception) {
+            $workflowState->setProcessException($exception);
         }
 
-        $this->next();
+        $this->next($workflowState);
     }
 }

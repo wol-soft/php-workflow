@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\Step;
 
+use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Step\Next\AllowNextAfter;
 use PHPWorkflow\Step\Next\AllowNextOnError;
 use PHPWorkflow\Step\Next\AllowNextOnSuccess;
@@ -17,8 +18,8 @@ class AfterProcess extends Step
         AllowNextAfter,
         AllowNextExecuteWorkflow;
 
-    protected function run(): void
+    protected function run(WorkflowState $workflowState): void
     {
-        $this->next();
+        $this->next($workflowState);
     }
 }

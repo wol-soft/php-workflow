@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\Step;
 
+use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Step\Next\AllowNextProcess;
 
 class Before extends Step
@@ -19,12 +20,14 @@ class Before extends Step
         return $this;
     }
 
-    protected function run(): void
+    protected function run(WorkflowState $workflowState): void
     {
+        $workflowState->setStage(WorkflowState::STAGE_BEFORE);
+
         foreach ($this->before as $before) {
-            ($before)();
+            $this->wrapStepExecution($before, $workflowState);
         }
 
-        $this->next();
+        $this->next($workflowState);
     }
 }

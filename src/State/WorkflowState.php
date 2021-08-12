@@ -23,6 +23,7 @@ class WorkflowState
     private WorkflowControl $workflowControl;
 
     private ExecutionLog $executionLog;
+    private string $workflowName;
 
     public function __construct(WorkflowControl $workflowControl)
     {
@@ -48,6 +49,16 @@ class WorkflowState
     public function setStage(int $stage): void
     {
         $this->stage = $stage;
+    }
+
+    public function getWorkflowName(): string
+    {
+        return $this->workflowName;
+    }
+
+    public function setWorkflowName(string $workflowName): void
+    {
+        $this->workflowName = $workflowName;
     }
 
     public function getWorkflowControl(): WorkflowControl

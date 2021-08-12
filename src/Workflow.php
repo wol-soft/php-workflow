@@ -28,6 +28,7 @@ class Workflow extends Stage
 
     protected function run(WorkflowState $workflowState): void
     {
+        $workflowState->setWorkflowName($this->name);
         $this->next($workflowState);
     }
 }

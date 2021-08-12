@@ -6,13 +6,15 @@ namespace PHPWorkflow\Stage\Next;
 
 use Exception;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
+use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\State\WorkflowResult;
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\WorkflowControl;
 
 trait AllowNextExecuteWorkflow
 {
-    public function executeWorkflow(bool $throwOnFailure = true): bool
+    public function executeWorkflow(bool $throwOnFailure = true): WorkflowResult
     {
         $workflowState = new WorkflowState(new WorkflowControl());
 
@@ -27,16 +29,21 @@ trait AllowNextExecuteWorkflow
             );
 
             if ($exception instanceof SkipWorkflowException) {
-                return true;
+                return new WorkflowResult(true, $workflowState->getExecutionLog());
             }
+
+            $result = new WorkflowResult(true, $workflowState->getExecutionLog());
 
             if ($throwOnFailure) {
-                throw $exception;
+                throw new WorkflowException($result, "Workflow {$workflowState->getWorkflowName()} failed", $exception);
             }
 
-            return false;
+            return $result;
         }
 
-        return true;
+        $workflowState->setStage(WorkflowState::STAGE_SUMMARY);
+        $workflowState->addExecutionLog('Workflow execution');
+
+        return new WorkflowResult(true, $workflowState->getExecutionLog());
     }
 }

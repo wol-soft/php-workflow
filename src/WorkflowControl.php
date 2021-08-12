@@ -43,4 +43,11 @@ class WorkflowControl
     {
         $this->executionLog->attachStepInfo($info);
     }
+
+    public function setStepState(bool $state): void
+    {
+        if (!$state) {
+            $this->failStep('');
+        }
+    }
 }

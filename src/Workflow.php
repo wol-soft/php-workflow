@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace PHPWorkflow;
 
 use PHPWorkflow\State\WorkflowState;
-use PHPWorkflow\Step\Next\AllowNextBefore;
-use PHPWorkflow\Step\Next\AllowNextProcess;
-use PHPWorkflow\Step\Next\AllowNextValidator;
-use PHPWorkflow\Step\Step;
+use PHPWorkflow\Stage\Next\AllowNextBefore;
+use PHPWorkflow\Stage\Next\AllowNextProcess;
+use PHPWorkflow\Stage\Next\AllowNextValidator;
+use PHPWorkflow\Stage\Stage;
 
-class Workflow extends Step
+class Workflow extends Stage
 {
     use
         AllowNextValidator,

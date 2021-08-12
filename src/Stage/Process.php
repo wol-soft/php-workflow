@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PHPWorkflow\Step;
+namespace PHPWorkflow\Stage;
 
 use Exception;
 use PHPWorkflow\State\WorkflowState;
 
-class Process extends Step
+class Process extends Stage
 {
     /** @var callable */
     private $process;

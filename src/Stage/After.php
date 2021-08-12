@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PHPWorkflow\Step;
+namespace PHPWorkflow\Stage;
 
 use PHPWorkflow\State\WorkflowState;
-use PHPWorkflow\Step\Next\AllowNextExecuteWorkflow;
+use PHPWorkflow\Stage\Next\AllowNextExecuteWorkflow;
 
-class After extends Step
+class After extends Stage
 {
     use AllowNextExecuteWorkflow;
 

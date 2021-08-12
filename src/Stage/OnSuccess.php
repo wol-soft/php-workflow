@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PHPWorkflow\Step;
+namespace PHPWorkflow\Stage;
 
 use PHPWorkflow\State\WorkflowState;
-use PHPWorkflow\Step\Next\AllowNextAfter;
-use PHPWorkflow\Step\Next\AllowNextOnError;
-use PHPWorkflow\Step\Next\AllowNextExecuteWorkflow;
+use PHPWorkflow\Stage\Next\AllowNextAfter;
+use PHPWorkflow\Stage\Next\AllowNextOnError;
+use PHPWorkflow\Stage\Next\AllowNextExecuteWorkflow;
 
-class OnSuccess extends Step
+class OnSuccess extends Stage
 {
     use
         AllowNextOnError,

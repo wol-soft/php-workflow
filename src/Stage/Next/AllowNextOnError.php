@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPWorkflow\Step\Next;
+namespace PHPWorkflow\Stage\Next;
 
-use PHPWorkflow\Step\OnError;
+use PHPWorkflow\Stage\OnError;
 
 trait AllowNextOnError
 {

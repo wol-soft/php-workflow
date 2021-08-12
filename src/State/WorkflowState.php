@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PHPWorkflow\State;
 
 use Exception;
+use PHPWorkflow\State\ExecutionLog\ExecutionLog;
 use PHPWorkflow\WorkflowControl;
 
 class WorkflowState
@@ -15,14 +16,18 @@ class WorkflowState
     public const STAGE_ON_ERROR = 3;
     public const STAGE_ON_SUCCESS = 4;
     public const STAGE_AFTER = 5;
+    public const STAGE_SUMMARY = 6;
 
     private ?Exception $processException = null;
     private int $stage = self::STAGE_VALIDATION;
     private WorkflowControl $workflowControl;
 
+    private ExecutionLog $executionLog;
+
     public function __construct(WorkflowControl $workflowControl)
     {
         $this->workflowControl = $workflowControl;
+        $this->executionLog = new ExecutionLog();
     }
 
     public function getProcessException(): ?Exception
@@ -48,5 +53,18 @@ class WorkflowState
     public function getWorkflowControl(): WorkflowControl
     {
         return $this->workflowControl;
+    }
+
+    public function addExecutionLog(
+        string $step,
+        string $state = ExecutionLog::STATE_SUCCESS,
+        ?string $reason = null
+    ): void {
+        $this->executionLog->addStep($this->stage, $step, $state, $reason);
+    }
+
+    public function getExecutionLog(): ExecutionLog
+    {
+        return $this->executionLog;
     }
 }

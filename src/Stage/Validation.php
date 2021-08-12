@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PHPWorkflow\Step;
+namespace PHPWorkflow\Stage;
 
 use Exception;
 use PHPWorkflow\Exception\WorkflowValidationException;
 use PHPWorkflow\State\WorkflowState;
-use PHPWorkflow\Step\Next\AllowNextBefore;
-use PHPWorkflow\Step\Next\AllowNextProcess;
+use PHPWorkflow\Stage\Next\AllowNextBefore;
+use PHPWorkflow\Stage\Next\AllowNextProcess;
 use PHPWorkflow\Validator;
 
-class Validation extends Step
+class Validation extends Stage
 {
     use
         AllowNextBefore,

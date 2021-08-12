@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PHPWorkflow\Step\Next;
+namespace PHPWorkflow\Stage\Next;
 
-use PHPWorkflow\Step\AfterProcess;
-use PHPWorkflow\Step\Process;
+use PHPWorkflow\Stage\AfterProcess;
+use PHPWorkflow\Stage\Process;
 
 trait AllowNextProcess
 {

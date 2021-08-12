@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PHPWorkflow\Step;
+namespace PHPWorkflow\Stage;
 
 use PHPWorkflow\State\WorkflowState;
-use PHPWorkflow\Step\Next\AllowNextProcess;
+use PHPWorkflow\Stage\Next\AllowNextProcess;
 
-class Before extends Step
+class Before extends Stage
 {
     use AllowNextProcess;
 

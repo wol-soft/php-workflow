@@ -62,6 +62,7 @@ class WorkflowState
     public function setWorkflowName(string $workflowName): void
     {
         $this->workflowName = $workflowName;
+        $this->executionLog->setWorkflowName($workflowName);
     }
 
     public function getWorkflowControl(): WorkflowControl

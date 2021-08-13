@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\State\ExecutionLog;
 
-use DateTime;
 use PHPWorkflow\State\WorkflowState;
 
 class ExecutionLog
@@ -17,9 +16,13 @@ class ExecutionLog
     private array $stages = [];
     /** @var string[] Collect additional debug info concerning the current step */
     private array $stepInfo = [];
-
     private float $startAt;
-    private float $stopAt;
+    private string $workflowName;
+
+    public function setWorkflowName(string $workflowName): void
+    {
+        $this->workflowName = $workflowName;
+    }
 
     public function addStep(int $stage, string $step, string $state, ?string $reason): void {
         $stage = $this->mapStage($stage);
@@ -30,7 +33,7 @@ class ExecutionLog
 
     public function __toString(): string
     {
-        $debug = '';
+        $debug = "Process log for workflow '{$this->workflowName}':\n";
 
         foreach ($this->stages as $stage => $steps) {
             $debug .= "$stage:\n";
@@ -55,8 +58,7 @@ class ExecutionLog
 
     public function stopExecution(): void
     {
-        $this->stopAt = microtime(true);
-        $this->attachStepInfo("Execution time: " . number_format(1000 * ($this->stopAt - $this->startAt), 5)) . 'ms';
+        $this->attachStepInfo("Execution time: " . number_format(1000 * (microtime(true) - $this->startAt), 5)) . 'ms';
     }
 
     private function mapStage(int $stage): string

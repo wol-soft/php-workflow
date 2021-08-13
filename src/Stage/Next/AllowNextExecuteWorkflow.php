@@ -25,8 +25,15 @@ trait AllowNextExecuteWorkflow
         $workflowState = new WorkflowState($workflowContainer);
 
         try {
+            $workflowState->getExecutionLog()->startExecution();
+
             $this->workflow->run($workflowState);
+
+            $workflowState->getExecutionLog()->stopExecution();
+            $workflowState->setStage(WorkflowState::STAGE_SUMMARY);
+            $workflowState->addExecutionLog('Workflow execution');
         } catch (Exception $exception) {
+            $workflowState->getExecutionLog()->stopExecution();
             $workflowState->setStage(WorkflowState::STAGE_SUMMARY);
             $workflowState->addExecutionLog(
                 'Workflow execution',
@@ -46,9 +53,6 @@ trait AllowNextExecuteWorkflow
 
             return $result;
         }
-
-        $workflowState->setStage(WorkflowState::STAGE_SUMMARY);
-        $workflowState->addExecutionLog('Workflow execution');
 
         return new WorkflowResult(true, $workflowState->getExecutionLog());
     }

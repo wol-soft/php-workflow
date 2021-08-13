@@ -12,7 +12,7 @@ interface WorkflowStep
     /**
      * Implement the logic for your step
      */
-    public function __invoke(WorkflowControl $control, WorkflowContainer $container);
+    public function __invoke(WorkflowControl $control, WorkflowContainer $container): void;
 
     /**
      * Describe in a few words what this step does

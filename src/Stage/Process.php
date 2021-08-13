@@ -10,7 +10,7 @@ use PHPWorkflow\Step\WorkflowStep;
 
 class Process extends Stage
 {
-    private WorkflowStep $process;
+    private ?WorkflowStep $process = null;
 
     public function process(WorkflowStep $process): Process
     {

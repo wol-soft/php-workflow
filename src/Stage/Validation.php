@@ -9,6 +9,7 @@ use PHPWorkflow\Exception\WorkflowValidationException;
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Stage\Next\AllowNextBefore;
 use PHPWorkflow\Stage\Next\AllowNextProcess;
+use PHPWorkflow\Step\WorkflowStep;
 use PHPWorkflow\Validator;
 
 class Validation extends Stage
@@ -20,13 +21,13 @@ class Validation extends Stage
     /** @var Validator[] */
     private array $validators = [];
 
-    public function validate(string $description, callable $validator, bool $hardValidator = false): self
+    public function validate(WorkflowStep $step, bool $hardValidator = false): self
     {
-        $this->validators[] = new Validator($description, $validator, $hardValidator);
+        $this->validators[] = new Validator($step, $hardValidator);
         return $this;
     }
 
-    protected function run(WorkflowState $workflowState): void
+    protected function run(WorkflowState $workflowState): ?Stage
     {
         $workflowState->setStage(WorkflowState::STAGE_VALIDATION);
 
@@ -40,12 +41,12 @@ class Validation extends Stage
 
         foreach ($this->validators as $validator) {
             if ($validator->isHardValidator()) {
-                $this->wrapStepExecution($validator->getDescription(), $validator->getValidator(), $workflowState);
+                $this->wrapStepExecution($validator->getStep(), $workflowState);
             } else {
                 $validationErrors = [];
 
                 try {
-                    $this->wrapStepExecution($validator->getDescription(), $validator->getValidator(), $workflowState);
+                    $this->wrapStepExecution($validator->getStep(), $workflowState);
                 } catch (Exception $exception) {
                     $validationErrors[] = $exception;
                 }
@@ -56,6 +57,6 @@ class Validation extends Stage
             }
         }
 
-        $this->next($workflowState);
+        return $this->next;
     }
 }

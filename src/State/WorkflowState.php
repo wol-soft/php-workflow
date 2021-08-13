@@ -10,25 +10,28 @@ use PHPWorkflow\WorkflowControl;
 
 class WorkflowState
 {
-    public const STAGE_VALIDATION = 0;
-    public const STAGE_BEFORE = 1;
-    public const STAGE_PROCESS = 2;
-    public const STAGE_ON_ERROR = 3;
-    public const STAGE_ON_SUCCESS = 4;
-    public const STAGE_AFTER = 5;
-    public const STAGE_SUMMARY = 6;
+    public const STAGE_PREPARE = 0;
+    public const STAGE_VALIDATION = 1;
+    public const STAGE_BEFORE = 2;
+    public const STAGE_PROCESS = 3;
+    public const STAGE_ON_ERROR = 4;
+    public const STAGE_ON_SUCCESS = 5;
+    public const STAGE_AFTER = 6;
+    public const STAGE_SUMMARY = 7;
 
     private ?Exception $processException = null;
     private int $stage = self::STAGE_VALIDATION;
     private WorkflowControl $workflowControl;
+    private WorkflowContainer $workflowContainer;
 
     private ExecutionLog $executionLog;
     private string $workflowName;
 
-    public function __construct()
+    public function __construct(WorkflowContainer $workflowContainer)
     {
         $this->executionLog = new ExecutionLog();
         $this->workflowControl = new WorkflowControl($this->executionLog);
+        $this->workflowContainer = $workflowContainer;
     }
 
     public function getProcessException(): ?Exception
@@ -64,6 +67,11 @@ class WorkflowState
     public function getWorkflowControl(): WorkflowControl
     {
         return $this->workflowControl;
+    }
+
+    public function getWorkflowContainer(): WorkflowContainer
+    {
+        return $this->workflowContainer;
     }
 
     public function addExecutionLog(

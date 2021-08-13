@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWorkflow;
 
+use PHPWorkflow\Stage\Next\AllowNextPrepare;
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Stage\Next\AllowNextBefore;
 use PHPWorkflow\Stage\Next\AllowNextProcess;
@@ -13,6 +14,7 @@ use PHPWorkflow\Stage\Stage;
 class Workflow extends Stage
 {
     use
+        AllowNextPrepare,
         AllowNextValidator,
         AllowNextBefore,
         AllowNextProcess;
@@ -26,9 +28,19 @@ class Workflow extends Stage
         $this->name = $name;
     }
 
-    protected function run(WorkflowState $workflowState): void
+    protected function run(WorkflowState $workflowState): ?Stage
     {
         $workflowState->setWorkflowName($this->name);
-        $this->next($workflowState);
+
+        $next = $this->next;
+        while ($next) {
+            $next = $next->run($workflowState);
+        }
+
+        if ($workflowState->getProcessException()) {
+            throw $workflowState->getProcessException();
+        }
+
+        return null;
     }
 }

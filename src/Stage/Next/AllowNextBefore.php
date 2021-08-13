@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace PHPWorkflow\Stage\Next;
 
 use PHPWorkflow\Stage\Before;
+use PHPWorkflow\Step\WorkflowStep;
 
 trait AllowNextBefore
 {
-    public function before(string $description, callable $before): Before
+    public function before(WorkflowStep $step): Before
     {
-        return $this->next = (new Before($this->workflow))->before($description, $before);
+        return $this->next = (new Before($this->workflow))->before($step);
     }
 }

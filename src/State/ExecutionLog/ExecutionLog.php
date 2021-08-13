@@ -47,6 +47,7 @@ class ExecutionLog
     private function mapStage(int $stage): string
     {
         switch ($stage) {
+            case WorkflowState::STAGE_PREPARE: return 'Prepare';
             case WorkflowState::STAGE_VALIDATION: return 'Validation';
             case WorkflowState::STAGE_BEFORE: return 'Before';
             case WorkflowState::STAGE_PROCESS: return 'Process';

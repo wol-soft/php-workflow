@@ -8,14 +8,21 @@ use Exception;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
 use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\State\WorkflowResult;
 use PHPWorkflow\State\WorkflowState;
 
 trait AllowNextExecuteWorkflow
 {
-    public function executeWorkflow(bool $throwOnFailure = true): WorkflowResult
-    {
-        $workflowState = new WorkflowState();
+    public function executeWorkflow(
+        bool $throwOnFailure = true,
+        WorkflowContainer $workflowContainer = null
+    ): WorkflowResult {
+        if (!$workflowContainer) {
+            $workflowContainer = new WorkflowContainer();
+        }
+
+        $workflowState = new WorkflowState($workflowContainer);
 
         try {
             $this->workflow->run($workflowState);

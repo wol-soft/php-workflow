@@ -8,35 +8,29 @@ use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Stage\Next\AllowNextAfter;
 use PHPWorkflow\Stage\Next\AllowNextOnSuccess;
 use PHPWorkflow\Stage\Next\AllowNextExecuteWorkflow;
+use PHPWorkflow\Step\WorkflowStep;
 
-class OnError extends Stage
+class OnError extends MultiStepStage
 {
     use
         AllowNextOnSuccess,
         AllowNextAfter,
         AllowNextExecuteWorkflow;
 
-    private array $onError = [];
+    const STAGE = WorkflowState::STAGE_ON_ERROR;
 
-    public function onError(string $description, callable $onError): self
+    public function onError(WorkflowStep $step): self
     {
-        $this->onError[] = [$description, $onError];
-        return $this;
+        return $this->addStep($step);
     }
 
-    protected function run(WorkflowState $workflowState): void
+    protected function run(WorkflowState $workflowState): ?Stage
     {
         // don't execute onError steps if the workflow was successful
         if (!$workflowState->getProcessException()) {
-            $this->next($workflowState);
+            return $this->next;
         }
 
-        $workflowState->setStage(WorkflowState::STAGE_ON_ERROR);
-
-        foreach ($this->onError as [$description, $onError]) {
-            $this->wrapStepExecution($description, $onError, $workflowState);
-        }
-
-        $this->next($workflowState);
+        return parent::run($workflowState);
     }
 }

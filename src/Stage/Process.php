@@ -6,18 +6,19 @@ namespace PHPWorkflow\Stage;
 
 use Exception;
 use PHPWorkflow\State\WorkflowState;
+use PHPWorkflow\Step\WorkflowStep;
 
 class Process extends Stage
 {
-    private $process;
+    private WorkflowStep $process;
 
-    public function process(string $description, callable $process): Process
+    public function process(WorkflowStep $process): Process
     {
         if ($this->process) {
             throw new Exception('Process already attached');
         }
 
-        $this->process = [$description, $process];
+        $this->process = $process;
         $this->next = new AfterProcess($this->workflow);
 
         return $this;
@@ -28,17 +29,16 @@ class Process extends Stage
         return $this->next;
     }
 
-    protected function run(WorkflowState $workflowState): void
+    protected function run(WorkflowState $workflowState): ?Stage
     {
         $workflowState->setStage(WorkflowState::STAGE_PROCESS);
 
         try {
-            [$description, $process] = $this->process;
-            $this->wrapStepExecution($description, $process, $workflowState);
+            $this->wrapStepExecution($this->process, $workflowState);
         } catch (Exception $exception) {
             $workflowState->setProcessException($exception);
         }
 
-        $this->next($workflowState);
+        return $this->next;
     }
 }

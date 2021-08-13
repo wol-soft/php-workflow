@@ -4,29 +4,18 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\Stage;
 
-use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Stage\Next\AllowNextProcess;
+use PHPWorkflow\State\WorkflowState;
+use PHPWorkflow\Step\WorkflowStep;
 
-class Before extends Stage
+class Before extends MultiStepStage
 {
     use AllowNextProcess;
 
-    private array $before = [];
+    const STAGE = WorkflowState::STAGE_BEFORE;
 
-    public function before(string $description, callable $before): self
+    public function before(WorkflowStep $step): self
     {
-        $this->before[] = [$description, $before];
-        return $this;
-    }
-
-    protected function run(WorkflowState $workflowState): void
-    {
-        $workflowState->setStage(WorkflowState::STAGE_BEFORE);
-
-        foreach ($this->before as [$description, $before]) {
-            $this->wrapStepExecution($description, $before, $workflowState);
-        }
-
-        $this->next($workflowState);
+        return $this->addStep($step);
     }
 }

@@ -11,6 +11,7 @@ use PHPWorkflow\Exception\WorkflowControl\SkipStepException;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
 use PHPWorkflow\State\WorkflowState;
+use PHPWorkflow\Step\WorkflowStep;
 use PHPWorkflow\Workflow;
 
 abstract class Stage
@@ -23,29 +24,14 @@ abstract class Stage
         $this->workflow = $workflow;
     }
 
-    abstract protected function run(WorkflowState $workflowState): void;
+    abstract protected function run(WorkflowState $workflowState): ?Stage;
 
-    protected function next(WorkflowState $workflowState): void
-    {
-        if ($this->next) {
-            $this->next->run($workflowState);
-        } else {
-            if ($workflowState->getProcessException()) {
-                throw $workflowState->getProcessException();
-            }
-        }
-    }
-
-    protected function wrapStepExecution(
-        string $description,
-        callable $stepExecution,
-        WorkflowState $workflowState
-    ): void {
+    protected function wrapStepExecution(WorkflowStep $step, WorkflowState $workflowState): void {
         try {
-            ($stepExecution)($workflowState->getWorkflowControl());
+            ($step)($workflowState->getWorkflowControl(), $workflowState->getWorkflowContainer());
         } catch (SkipStepException | FailStepException $exception) {
             $workflowState->addExecutionLog(
-                $description,
+                $step->getDescription(),
                 $exception instanceof FailStepException ? ExecutionLog::STATE_FAILED : ExecutionLog::STATE_SKIPPED,
                 $exception->getMessage(),
             );
@@ -58,8 +44,8 @@ abstract class Stage
             return;
         } catch (Exception $exception) {
             $workflowState->addExecutionLog(
-                $description,
-                $exception instanceof SkipWorkflowException ? ExecutionLog::STATE_SKIPPED : ExecutionLog::STATE_FAILED,
+                $step->getDescription(),
+                $exception instanceof SkipWorkflowException ? ExecutionLog::STATE_SUCCESS : ExecutionLog::STATE_FAILED,
                 $exception->getMessage(),
             );
 
@@ -69,6 +55,6 @@ abstract class Stage
             }
         }
 
-        $workflowState->addExecutionLog($description);
+        $workflowState->addExecutionLog($step->getDescription());
     }
 }

@@ -4,31 +4,26 @@ declare(strict_types=1);
 
 namespace PHPWorkflow;
 
+use PHPWorkflow\Step\WorkflowStep;
+
 class Validator
 {
-    private string $description;
-    private $validator;
+    private WorkflowStep $step;
     private bool $hardValidator;
 
-    public function __construct(string $description, callable $validator, bool $hardValidator)
+    public function __construct(WorkflowStep $step, bool $hardValidator)
     {
-        $this->description = $description;
-        $this->validator = $validator;
+        $this->step = $step;
         $this->hardValidator = $hardValidator;
     }
 
-    public function getValidator(): callable
+    public function getStep(): WorkflowStep
     {
-        return $this->validator;
+        return $this->step;
     }
 
     public function isHardValidator(): bool
     {
         return $this->hardValidator;
-    }
-
-    public function getDescription(): string
-    {
-        return $this->description;
     }
 }

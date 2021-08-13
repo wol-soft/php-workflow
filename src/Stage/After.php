@@ -6,27 +6,16 @@ namespace PHPWorkflow\Stage;
 
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Stage\Next\AllowNextExecuteWorkflow;
+use PHPWorkflow\Step\WorkflowStep;
 
-class After extends Stage
+class After extends MultiStepStage
 {
     use AllowNextExecuteWorkflow;
 
-    private array $after = [];
+    const STAGE = WorkflowState::STAGE_AFTER;
 
-    public function after(string $description, callable $after): self
+    public function after(WorkflowStep $step): self
     {
-        $this->after[] = [$description, $after];
-        return $this;
-    }
-
-    protected function run(WorkflowState $workflowState): void
-    {
-        $workflowState->setStage(WorkflowState::STAGE_AFTER);
-
-        foreach ($this->after as [$description, $after]) {
-            $this->wrapStepExecution($description, $after, $workflowState);
-        }
-
-        $this->next($workflowState);
+        return $this->addStep($step);
     }
 }

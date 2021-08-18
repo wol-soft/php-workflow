@@ -11,6 +11,6 @@ trait AllowNextAfter
 {
     public function after(WorkflowStep $step): After
     {
-        return $this->next = (new After($this->workflow))->after($step);
+        return $this->nextStage = (new After($this->workflow))->after($step);
     }
 }

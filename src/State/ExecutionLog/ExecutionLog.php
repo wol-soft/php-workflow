@@ -58,7 +58,7 @@ class ExecutionLog
 
     public function stopExecution(): void
     {
-        $this->attachStepInfo("Execution time: " . number_format(1000 * (microtime(true) - $this->startAt), 5)) . 'ms';
+        $this->attachStepInfo("Execution time: " . number_format(1000 * (microtime(true) - $this->startAt), 5) . 'ms');
     }
 
     private function mapStage(int $stage): string

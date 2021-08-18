@@ -11,6 +11,6 @@ trait AllowNextValidator
 {
     public function validate(WorkflowStep $step, bool $hardValidator = false): Validation
     {
-        return $this->next = (new Validation($this->workflow))->validate($step, $hardValidator);
+        return $this->nextStage = (new Validation($this->workflow))->validate($step, $hardValidator);
     }
 }

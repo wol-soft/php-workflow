@@ -18,8 +18,8 @@ class AfterProcess extends Stage
         AllowNextAfter,
         AllowNextExecuteWorkflow;
 
-    protected function run(WorkflowState $workflowState): ?Stage
+    protected function runStage(WorkflowState $workflowState): ?Stage
     {
-        return $this->next;
+        return $this->nextStage;
     }
 }

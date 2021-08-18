@@ -12,8 +12,8 @@ trait AllowNextProcess
 {
     public function process(WorkflowStep $step): AfterProcess
     {
-        $this->next = (new Process($this->workflow))->process($step);
+        $this->nextStage = (new Process($this->workflow))->process($step);
 
-        return $this->next->getAfterProcess();
+        return $this->nextStage->getAfterProcess();
     }
 }

@@ -27,7 +27,7 @@ trait AllowNextExecuteWorkflow
         try {
             $workflowState->getExecutionLog()->startExecution();
 
-            $this->workflow->run($workflowState);
+            $this->workflow->runStage($workflowState);
 
             $workflowState->getExecutionLog()->stopExecution();
             $workflowState->setStage(WorkflowState::STAGE_SUMMARY);

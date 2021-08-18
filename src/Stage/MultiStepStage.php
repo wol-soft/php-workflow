@@ -20,7 +20,7 @@ abstract class MultiStepStage extends Stage
         return $this;
     }
 
-    protected function run(WorkflowState $workflowState): ?Stage
+    protected function runStage(WorkflowState $workflowState): ?Stage
     {
         $workflowState->setStage(static::STAGE);
 
@@ -28,6 +28,6 @@ abstract class MultiStepStage extends Stage
             $this->wrapStepExecution($step, $workflowState);
         }
 
-        return $this->next;
+        return $this->nextStage;
     }
 }

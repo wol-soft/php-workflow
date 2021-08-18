@@ -26,6 +26,7 @@ class WorkflowState
 
     private ExecutionLog $executionLog;
     private string $workflowName;
+    private array $middlewares = [];
 
     public function __construct(WorkflowContainer $workflowContainer)
     {
@@ -86,5 +87,15 @@ class WorkflowState
     public function getExecutionLog(): ExecutionLog
     {
         return $this->executionLog;
+    }
+
+    public function setMiddlewares(array $middlewares): void
+    {
+        $this->middlewares = $middlewares;
+    }
+
+    public function getMiddlewares(): array
+    {
+        return $this->middlewares;
     }
 }

@@ -11,6 +11,6 @@ trait AllowNextPrepare
 {
     public function prepare(WorkflowStep $step): Prepare
     {
-        return $this->next = (new Prepare($this->workflow))->before($step);
+        return $this->nextStage = (new Prepare($this->workflow))->before($step);
     }
 }

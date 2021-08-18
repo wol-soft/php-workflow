@@ -18,18 +18,18 @@ class Process extends Stage
             throw new Exception('Process already attached');
         }
 
-        $this->process = $process;
-        $this->next = new AfterProcess($this->workflow);
+        $this->process   = $process;
+        $this->nextStage = new AfterProcess($this->workflow);
 
         return $this;
     }
 
     public function getAfterProcess(): AfterProcess
     {
-        return $this->next;
+        return $this->nextStage;
     }
 
-    protected function run(WorkflowState $workflowState): ?Stage
+    protected function runStage(WorkflowState $workflowState): ?Stage
     {
         $workflowState->setStage(WorkflowState::STAGE_PROCESS);
 
@@ -39,6 +39,6 @@ class Process extends Stage
             $workflowState->setProcessException($exception);
         }
 
-        return $this->next;
+        return $this->nextStage;
     }
 }

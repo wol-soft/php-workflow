@@ -11,6 +11,6 @@ trait AllowNextBefore
 {
     public function before(WorkflowStep $step): Before
     {
-        return $this->next = (new Before($this->workflow))->before($step);
+        return $this->nextStage = (new Before($this->workflow))->before($step);
     }
 }

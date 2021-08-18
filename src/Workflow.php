@@ -19,22 +19,31 @@ class Workflow extends Stage
         AllowNextBefore,
         AllowNextProcess;
 
+    private static array $globalMiddleware = [];
     private string $name;
+    private array $middleware;
 
-    public function __construct(string $name)
+    public static function addGlobalMiddleware(callable $middleware): void
+    {
+        self::$globalMiddleware[] = $middleware;
+    }
+
+    public function __construct(string $name, callable ...$middlewares)
     {
         parent::__construct($this);
 
         $this->name = $name;
+        $this->middleware = $middlewares;
     }
 
-    protected function run(WorkflowState $workflowState): ?Stage
+    protected function runStage(WorkflowState $workflowState): ?Stage
     {
         $workflowState->setWorkflowName($this->name);
+        $workflowState->setMiddlewares([...self::$globalMiddleware, ...$this->middleware]);
 
-        $next = $this->next;
-        while ($next) {
-            $next = $next->run($workflowState);
+        $nextStage = $this->nextStage;
+        while ($nextStage) {
+            $nextStage = $nextStage->runStage($workflowState);
         }
 
         if ($workflowState->getProcessException()) {

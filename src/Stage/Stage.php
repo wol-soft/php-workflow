@@ -16,7 +16,7 @@ use PHPWorkflow\Workflow;
 
 abstract class Stage
 {
-    protected ?Stage $next = null;
+    protected ?Stage $nextStage = null;
     protected Workflow $workflow;
 
     public function __construct(Workflow $workflow)
@@ -24,11 +24,11 @@ abstract class Stage
         $this->workflow = $workflow;
     }
 
-    abstract protected function run(WorkflowState $workflowState): ?Stage;
+    abstract protected function runStage(WorkflowState $workflowState): ?Stage;
 
     protected function wrapStepExecution(WorkflowStep $step, WorkflowState $workflowState): void {
         try {
-            ($step)($workflowState->getWorkflowControl(), $workflowState->getWorkflowContainer());
+            ($this->resolveMiddleware($step, $workflowState))();
         } catch (SkipStepException | FailStepException $exception) {
             $workflowState->addExecutionLog(
                 $step->getDescription(),
@@ -56,5 +56,20 @@ abstract class Stage
         }
 
         $workflowState->addExecutionLog($step->getDescription());
+    }
+
+    private function resolveMiddleware(WorkflowStep $step, WorkflowState $workflowState): callable
+    {
+        $tip = fn () => $step->run($workflowState->getWorkflowControl(), $workflowState->getWorkflowContainer());
+
+        foreach ($workflowState->getMiddlewares() as $middleware) {
+            $tip = fn () => $middleware(
+                $tip,
+                $workflowState->getWorkflowControl(),
+                $workflowState->getWorkflowContainer(),
+            );
+        }
+
+        return $tip;
     }
 }

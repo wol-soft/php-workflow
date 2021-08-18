@@ -11,6 +11,6 @@ trait AllowNextOnError
 {
     public function onError(WorkflowStep $step): OnError
     {
-        return $this->next = (new OnError($this->workflow))->onError($step);
+        return $this->nextStage = (new OnError($this->workflow))->onError($step);
     }
 }

@@ -11,6 +11,6 @@ trait AllowNextOnSuccess
 {
     public function onSuccess(WorkflowStep $step): OnSuccess
     {
-        return $this->next = (new OnSuccess($this->workflow))->onSuccess($step);
+        return $this->nextStage = (new OnSuccess($this->workflow))->onSuccess($step);
     }
 }

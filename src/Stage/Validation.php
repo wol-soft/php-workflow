@@ -27,7 +27,7 @@ class Validation extends Stage
         return $this;
     }
 
-    protected function run(WorkflowState $workflowState): ?Stage
+    protected function runStage(WorkflowState $workflowState): ?Stage
     {
         $workflowState->setStage(WorkflowState::STAGE_VALIDATION);
 
@@ -57,6 +57,6 @@ class Validation extends Stage
             }
         }
 
-        return $this->next;
+        return $this->nextStage;
     }
 }

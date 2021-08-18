@@ -24,13 +24,13 @@ class OnSuccess extends MultiStepStage
         return $this->addStep($step);
     }
 
-    protected function run(WorkflowState $workflowState): ?Stage
+    protected function runStage(WorkflowState $workflowState): ?Stage
     {
         // don't execute onSuccess steps if the workflow failed
         if ($workflowState->getProcessException()) {
-            return $this->next;
+            return $this->nextStage;
         }
 
-        return parent::run($workflowState);
+        return parent::runStage($workflowState);
     }
 }

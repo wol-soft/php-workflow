@@ -13,7 +13,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 * [Example workflow](#Example-workflow)
 * [Stages](#Stages)
 * [Workflow control](#Workflow-control)
-* [Error handling, logging and debugging](#Error-handling,-logging-and-debugging)
+* [Error handling, logging and debugging](#Error-handling-logging-and-debugging)
 
 ## Installation
 

@@ -4,17 +4,40 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\State;
 
-use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use Exception;
 
 class WorkflowResult
 {
     private bool $success;
-    private ExecutionLog $executionLog;
+    private WorkflowState $workflowState;
+    private ?Exception $exception;
 
-    public function __construct(bool $success, ExecutionLog $executionLog)
-    {
+    public function __construct(
+        bool $success,
+        bool $logErrors,
+        WorkflowState $workflowState,
+        ?Exception $exception = null
+    ) {
         $this->success = $success;
-        $this->executionLog = $executionLog;
+        $this->workflowState = $workflowState;
+        $this->exception = $exception;
+
+        if ($logErrors) {
+            if ($this->hasWarnings()) {
+                trigger_error(
+                    "Workflow {$workflowState->getWorkflowName()} finished with warnings. Check the workflow debug log for more details.",
+                    E_USER_WARNING,
+                );
+            }
+
+            // don't add failures from validations to the error log
+            if (!$success && $workflowState->getStage() !== WorkflowState::STAGE_VALIDATION) {
+                trigger_error(
+                    "Workflow {$workflowState->getWorkflowName()} failed. Check the workflow debug log for more details.",
+                    E_USER_WARNING,
+                );
+            }
+        }
     }
 
     public function success(): bool
@@ -24,6 +47,21 @@ class WorkflowResult
 
     public function debug(): string
     {
-        return (string) $this->executionLog;
+        return (string) $this->workflowState->getExecutionLog();
+    }
+
+    public function hasWarnings(): bool
+    {
+        return count($this->workflowState->getExecutionLog()->getWarnings()) > 0;
+    }
+
+    public function getWarnings(): array
+    {
+        return $this->workflowState->getExecutionLog()->getWarnings();
+    }
+
+    public function getException(): ?Exception
+    {
+        return $this->exception;
     }
 }

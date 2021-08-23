@@ -5,36 +5,32 @@ declare(strict_types=1);
 namespace PHPWorkflow\Stage;
 
 use Exception;
+use PHPWorkflow\Stage\Next\AllowNextAfter;
+use PHPWorkflow\Stage\Next\AllowNextExecuteWorkflow;
+use PHPWorkflow\Stage\Next\AllowNextOnError;
+use PHPWorkflow\Stage\Next\AllowNextOnSuccess;
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Step\WorkflowStep;
 
-class Process extends Stage
+class Process extends MultiStepStage
 {
-    private ?WorkflowStep $process = null;
+    use
+        AllowNextOnSuccess,
+        AllowNextOnError,
+        AllowNextAfter,
+        AllowNextExecuteWorkflow;
 
-    public function process(WorkflowStep $process): Process
+    const STAGE = WorkflowState::STAGE_PROCESS;
+
+    public function process(WorkflowStep $step): self
     {
-        if ($this->process) {
-            throw new Exception('Process already attached');
-        }
-
-        $this->process   = $process;
-        $this->nextStage = new AfterProcess($this->workflow);
-
-        return $this;
-    }
-
-    public function getAfterProcess(): AfterProcess
-    {
-        return $this->nextStage;
+        return $this->addStep($step);
     }
 
     protected function runStage(WorkflowState $workflowState): ?Stage
     {
-        $workflowState->setStage(WorkflowState::STAGE_PROCESS);
-
         try {
-            $this->wrapStepExecution($this->process, $workflowState);
+            parent::runStage($workflowState);
         } catch (Exception $exception) {
             $workflowState->setProcessException($exception);
         }

@@ -15,8 +15,9 @@ use PHPWorkflow\State\WorkflowState;
 trait AllowNextExecuteWorkflow
 {
     public function executeWorkflow(
+        WorkflowContainer $workflowContainer = null,
         bool $throwOnFailure = true,
-        WorkflowContainer $workflowContainer = null
+        bool $logErrors = true
     ): WorkflowResult {
         if (!$workflowContainer) {
             $workflowContainer = new WorkflowContainer();
@@ -42,10 +43,10 @@ trait AllowNextExecuteWorkflow
             );
 
             if ($exception instanceof SkipWorkflowException) {
-                return new WorkflowResult(true, $workflowState->getExecutionLog());
+                return new WorkflowResult(true, $logErrors, $workflowState);
             }
 
-            $result = new WorkflowResult(true, $workflowState->getExecutionLog());
+            $result = new WorkflowResult(false, $logErrors, $workflowState, $exception);
 
             if ($throwOnFailure) {
                 throw new WorkflowException($result, "Workflow {$workflowState->getWorkflowName()} failed", $exception);
@@ -54,6 +55,6 @@ trait AllowNextExecuteWorkflow
             return $result;
         }
 
-        return new WorkflowResult(true, $workflowState->getExecutionLog());
+        return new WorkflowResult(true, $logErrors, $workflowState);
     }
 }

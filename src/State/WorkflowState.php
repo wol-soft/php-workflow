@@ -30,7 +30,7 @@ class WorkflowState
 
     public function __construct(WorkflowContainer $workflowContainer)
     {
-        $this->executionLog = new ExecutionLog();
+        $this->executionLog = new ExecutionLog($this);
         $this->workflowControl = new WorkflowControl($this->executionLog);
         $this->workflowContainer = $workflowContainer;
     }
@@ -63,7 +63,6 @@ class WorkflowState
     public function setWorkflowName(string $workflowName): void
     {
         $this->workflowName = $workflowName;
-        $this->executionLog->setWorkflowName($workflowName);
     }
 
     public function getWorkflowControl(): WorkflowControl

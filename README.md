@@ -1,1 +1,367 @@
 # php-workflow
+
+Create controlled workflows from small pieces.
+
+This library provides a predefined set of stages to glue together your workflows.
+You implement small self-contained pieces of code and define the execution order - everything else will be done by the execution control.
+
+Bonus: you will get an execution log for each executed workflow - if you want to see what's happening.
+
+## Table of Contents ##
+
+* [Installation](#Installation)
+* [Example workflow](#Example-workflow)
+* [Stages](#Stages)
+* [Workflow control](#Workflow-control)
+* [Error handling, logging and debugging](#Error-handling,-logging-and-debugging)
+
+## Installation
+
+The recommended way to install php-workflow is through [Composer](http://getcomposer.org):
+```
+$ composer require wol-soft/php-workflow
+```
+
+Requirements of the library:
+
+- Requires at least PHP 7.4
+
+## Example workflow
+
+Let's have a look at a code example first.
+Our example will represent the code to add a song to a playlist in a media player.
+Casually you will have a controller method which glues together all necessary steps with many if's, returns, try-catch blocks and so on.
+Now let's have a look at a possible workflow definition:
+
+```php
+$workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
+    ->validate(new CurrentUserIsAllowedToEditPlaylistValidator())
+    ->validate(new PlaylistAlreadyContainsSongValidator())
+    ->before(new AcceptOpenSuggestionForSong())
+    ->process(new AddSongToPlaylist())
+    ->onSuccess(new NotifySubscribers())
+    ->onSuccess(new AddPlaylistLogEntry())
+    ->onSuccess(new UpdateLastAddedToPlaylists())
+    ->onError(new RecoverLog())
+    ->executeWorkflow();
+```
+
+This workflow may create an execution log which looks like the following (more examples coming up later):
+
+```
+Process log for workflow 'AddSongToPlaylist':
+Validation:
+  - Check if the playlist is editable: ok
+  - Check if the playlist already contains the requested song: ok
+Before:
+  - Accept open suggestions for songs which shall be added: skipped (No open suggestions for playlist)
+Process:
+  - Add the songs to the playlist: ok
+    - Appended song at the end of the playlist
+    - New playlist length: 2
+On Success:
+  - Notify playlist subscribers about added song: ok
+    - Notified 5 users
+  - Persist changes in the playlist log: ok
+  - Update the users list of last contributed playlists: ok
+
+Summary:
+  - Workflow execution: ok
+    - Execution time: 45.27205ms
+```
+
+Now let's check what exactly happens.
+Each step of your workflow is represented by an own class which implements the step.
+Each of these classes must implement the **\PHPWorkflow\Step\WorkflowStep** interface.
+Until you call the **executeWorkflow** method nothing will be executed.
+
+By calling the **executeWorkflow** method the workflow engine is triggered to start the execution with the first used stage.
+In our example the validations will be executed first.
+If all validations are successfully the next stage will be executed otherwise the workflow execution will be cancelled.
+
+Let's have a more precise look at the implementation of a single step through the example of the *before* step **AcceptOpenSuggestionForSong**.
+Some feature background to understand what's happening in our example: our application allows users to suggest songs for playlists.
+If the owner of a playlist adds a song to a playlist which already exists as an open suggestion the suggestion shall be accepted instead of adding the song to the playlist and leave the suggestion untouched.
+Now let's face the implementation with some inline comments to describe the workflow control:
+
+```php
+class AcceptOpenSuggestionForSong implements \PHPWorkflow\Step\WorkflowStep {
+    /**
+     * Each step must provide a description. The description will be used in the debug
+     * log of the workflow to get a readable representation of an executed workflow 
+     */
+    public function getDescription(): string
+    {
+        return 'Accept open suggestions for songs which shall be added to a playlist';
+    }
+
+    /**
+     * Each step will get access to two objects to interact with the workflow.
+     * First the WorkflowControl object $control which provides methods to skip
+     * steps, mark tests as failed, add debug information etc.
+     * Second the WorkflowContainer object $container which allows us to get access
+     * to various workflow related objects.
+     */
+    public function run(
+        \PHPWorkflow\WorkflowControl $control,
+        \PHPWorkflow\State\WorkflowContainer $container
+    ) {
+        $openSuggestions = (new SuggestionRepository())
+            ->getOpenSuggestionsByPlaylistId($container->get('playlist')->getId());
+
+        // If we detect a condition which makes a further execution of the step
+        // unnecessary we can simply skip the further execution.
+        // By providing a meaningful reason our workflow debug log will be helpful.
+        if (empty($openSuggestions)) {
+            $control->skipStep('No open suggestions for playlist');
+        }
+
+        foreach ($openSuggestions as $suggestion) {
+            if ($suggestion->getSongId() === $container->get('song')->getId()) {
+                if ((new SuggestionService())->acceptSuggestion($suggestion)) {
+                    // If we detect a condition where the further workflow execution is
+                    // unnecessary we can skip the further execution.
+                    // In this example the open suggestion was accepted successfully so
+                    // the song must not be added to the playlist via the workflow.
+                    $control->skipWorkflow('Accepted open suggestion');
+                }
+
+                // We can add warnings to the debug log. Another option in this case could
+                // be to call $control->failWorkflow() if we want the workflow to fail in
+                // an error case.
+                // In our example, if the suggestion can't be accepted, we want to add the
+                // song to the playlist via the workflow.
+                $control->warning("Failed to accept open suggestion {$suggestion->getId()}");
+            }
+        }
+
+        // for completing the debug log we mark this step as skipped if no action has been
+        // performed. If we don't mark the step as skipped and no action has been performed
+        // the step will occur as 'ok' in the debug log - depends on your preferences :)
+        $control->skipStep('No matching open suggestion');
+    }
+}
+```
+
+Now let's have a more detailed look at the **WorkflowContainer** which helps us, to share data and objects between our workflow steps.
+The relevant objects for our example workflow is the **User** who wants to add the song, the **Song** object of the song to add and the **Playlist** object.
+Before we execute our workflow we can set up a **WorkflowContainer** which contains all relevant objects:
+
+```php
+$workflowContainer = (new \PHPWorkflow\State\WorkflowContainer())
+    ->set('user', Session::getUser())
+    ->set('song', (new SongRepository())->getSongById($request->get('songId')))
+    ->set('playlist', (new PlaylistRepository())->getPlaylistById($request->get('playlistId')));
+```
+
+When we execute the workflow via **executeWorkflow** we can inject the **WorkflowContainer**.
+
+```php
+$workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
+    // ...
+    ->executeWorkflow($workflowContainer);
+```
+
+Another possibility would be to define a step in the **Prepare** stage (e.g. **PopulateAddSongToPlaylistContainer**) which populates the injected **WorkflowContainer** object.
+
+## Stages
+
+The following predefined stages are available when defining a workflow:
+
+* Prepare
+* Validate
+* Before
+* Process
+* OnSuccess
+* OnError
+* After
+
+Each stage has a defined set of stages which may be called afterwards (e.g. you may skip the **Before** stage).
+When setting up a workflow your IDE will support you by suggesting only possible next steps via autocompletion.
+Each workflow must contain at least one step in the **Process** stage.
+
+Any step added to the workflow may throw an exception. Each exception will be caught and is handled like a failed step.
+If a step in the stages **Prepare**, **Validate** (see details for the stage) or **Before** fails, the workflow is failed and will not be executed further.
+
+Any step may skip or fail the workflow via the **WorkflowControl**.
+If the **Process** stage has been executed and any later step tries to fail or skip the whole workflow it's handled as a failed/skipped step.
+
+Now let's have a look at some stage-specific details.
+
+### Prepare
+
+This stage allows you to add steps which must be executed before any validation or process execution is triggered.
+Steps may contain data loading, gaining workflow relevant semaphores, etc.
+
+### Validate
+
+This stage allows you to execute validations.
+There are two types of validations: hard validations and soft validations.
+All hard validations of the workflow will be executed before the soft validations.
+If a hard validation fails the workflow will be stopped immediately (e.g. access right violations).
+All soft validations of the workflow will be executed independently of their result.
+All failing soft validations will be collected in a **\PHPWorkflow\Exception\WorkflowValidationException** which is thrown at the end of the validation stage if any of the soft validations failed.
+
+When you attach a validation to your workflow the second parameter of the **validate** method defines if the validation is a soft or a hard validation:
+
+```php
+
+$workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
+    // hard validator: if the user isn't allowed to edit the playlist
+    // the workflow execution will be cancelled immediately
+    ->validate(new CurrentUserIsAllowedToEditPlaylistValidator(), true)
+    // soft validators: all validators will be executed
+    ->validate(new PlaylistAlreadyContainsSongValidator())
+    ->validate(new SongGenreMatchesPlaylistGenreValidator())
+    ->validate(new PlaylistContainsNoSongsFromInterpret())
+    // ...
+```
+
+In the provided example any of the soft validators may fail (e.g. the **SongGenreMatchesPlaylistGenreValidator** checks if the genre of the song matches the playlist, the **PlaylistContainsNoSongsFromInterpret** may check for duplicated interprets).
+The thrown **WorkflowValidationException** allows us to determine all violations and set up a corresponding error message.
+If all validators pass the next stage will be executed.
+
+### Before
+
+This stage allows you to perform preparatory steps with the knowledge that the workflow execution is valid.
+This steps may contain the allocation of resources, filtering the data to process etc.
+
+### Process
+
+This stage contains your main logic of the workflow. If any of the steps fails no further steps of the process stage will be executed.
+
+### OnSuccess
+
+This stage allows you to define steps which shall be executed if all steps of the **Process** stage are executed successfully.
+For example logging, notifications, sending emails, etc.
+
+All steps of the stage will be executed, even if some steps fail. All failing steps will be reported as warnings.
+
+### OnError
+
+This stage allows you to define steps which shall be executed if any step of the **Process** stage fails.
+For example logging, setting up recovery data, etc.
+
+All steps of the stage will be executed, even if some steps fail. All failing steps will be reported as warnings.
+
+### After
+
+This stage allows you to perform cleanup steps after all other stages have been executed. The steps will be executed regardless of the successful execution of the **Process** stage.
+
+All steps of the stage will be executed, even if some steps fail. All failing steps will be reported as warnings.
+
+## Workflow control
+
+The **WorkflowControl** object which is injected into each step provides the following interface to interact with the workflow:
+
+```php
+// Mark the current step as skipped.
+// Use this if you detect, that the step execution is not necessary
+// (e.g. disabled by config, no entity to process, ...)
+public function skipStep(string $reason): void;
+
+// Mark the current step as failed. A failed step before and during the processing of
+// a workflow leads to a failed workflow.
+public function failStep(string $reason): void;
+
+// Mark the workflow as failed. If the workflow is failed after the process stage has
+// been executed it's handled like a failed step.
+public function failWorkflow(string $reason): void;
+
+// Skip the further workflow execution (e.g. if you detect it's not necessary to process
+// the workflow). If the workflow is skipped after the process stage has been executed
+// it's handled like a skipped step.
+public function skipWorkflow(string $reason): void;
+
+// Attach any additional debug info to your current step.
+// The infos will be shown in the workflow debug log.
+public function attachStepInfo(string $info): void
+
+// Add a warning to the workflow.
+// All warnings will be collected and shown in the workflow debug log.
+public function warning(string $message): void;
+```
+
+## Error handling, logging and debugging
+
+The **executeWorkflow** method returns an **WorkflowResult** object which provides the following methods to determine the result of the workflow:
+
+```php
+// check if the workflow execution was successful
+public function success(): bool;
+// check if warnings were emitted during the workflow execution
+public function hasWarnings(): bool;
+// get a list of warnings, grouped by stage
+public function getWarnings(): array;
+// get the exception which caused the workflow to fail
+public function getException(): ?Exception;
+// get the debug execution log of the workflow
+public function debug(): string;
+```
+
+As stated above workflows with failing steps before the **Process** stage will be aborted, otherwise the **Process** stage and all downstream stages will be executed.
+
+By default, the execution of a workflow throws an exception if an error occurs.
+The thrown exception will be a **\PHPWorkflow\Exception\WorkflowException** which allows you to access the **WorkflowResult** object via the **getWorkflowResult** method.
+
+The **debug** method provides an execution log including all processed steps with their status, attached data  as well as a list of all warnings and performance data.
+
+Some example outputs for our example workflow may look like the following.
+
+### Successful execution
+
+```
+Process log for workflow 'AddSongToPlaylist':
+Validation:
+  - Check if the playlist is editable: ok
+  - Check if the playlist already contains the requested song: ok
+Before:
+  - Accept open suggestions for songs which shall be added: skipped (No open suggestions for playlist)
+Process:
+  - Add the songs to the playlist: ok
+    - Appended song at the end of the playlist
+    - New playlist length: 2
+On Success:
+  - Notify playlist subscribers about added song: ok
+    - Notified 5 users
+  - Persist changes in the playlist log: ok
+  - Update the users list of last contributed playlists: ok
+
+Summary:
+  - Workflow execution: ok
+    - Execution time: 45.27205ms
+```
+
+Note the additional data added to the debug log for the **Process** stage and the **NotifySubscribers** step via the **attachStepInfo** method of the **WorkflowControl**.
+
+### Failed workflow
+
+```
+Process log for workflow 'AddSongToPlaylist':
+Validation:
+  - Check if the playlist is editable: failed (playlist locked)
+
+Summary:
+  - Workflow execution: failed
+    - Execution time: 6.28195ms
+```
+
+In this example the **CurrentUserIsAllowedToEditPlaylistValidator** step threw an exception with the message `playlist locked`.
+
+### Workflow skipped
+
+```
+Process log for workflow 'AddSongToPlaylist':
+Validation:
+  - Check if the playlist is editable: ok
+  - Check if the playlist already contains the requested song: ok
+Before:
+  - Accept open suggestions for songs which shall be added: ok (Accepted open suggestion)
+
+Summary:
+  - Workflow execution: skipped (Accepted open suggestion)
+    - Execution time: 89.56986ms
+```
+
+In this example the **AcceptOpenSuggestionForSong** step found a matching open suggestion and successfully accepted the suggestion.
+Consequently, the further workflow execution is skipped.

@@ -16,12 +16,14 @@ class ExecutionLog
     private array $stages = [];
     /** @var string[] Collect additional debug info concerning the current step */
     private array $stepInfo = [];
+    /** @var string[][] Collect all warnings which occurred during the workflow execution */
+    private array $warnings = [];
     private float $startAt;
-    private string $workflowName;
+    private WorkflowState $workflowState;
 
-    public function setWorkflowName(string $workflowName): void
+    public function __construct(WorkflowState $workflowState)
     {
-        $this->workflowName = $workflowName;
+        $this->workflowState = $workflowState;
     }
 
     public function addStep(int $stage, string $step, string $state, ?string $reason): void {
@@ -33,7 +35,7 @@ class ExecutionLog
 
     public function __toString(): string
     {
-        $debug = "Process log for workflow '{$this->workflowName}':\n";
+        $debug = "Process log for workflow '{$this->workflowState->getWorkflowName()}':\n";
 
         foreach ($this->stages as $stage => $steps) {
             $debug .= "$stage:\n";
@@ -51,6 +53,11 @@ class ExecutionLog
         $this->stepInfo[] = $info;
     }
 
+    public function addWarning(string $message): void
+    {
+        $this->warnings[$this->mapStage($this->workflowState->getStage())][] = $message;
+    }
+
     public function startExecution(): void
     {
         $this->startAt = microtime(true);
@@ -59,6 +66,22 @@ class ExecutionLog
     public function stopExecution(): void
     {
         $this->attachStepInfo("Execution time: " . number_format(1000 * (microtime(true) - $this->startAt), 5) . 'ms');
+
+        if ($this->warnings) {
+            $warnings = "Got " . count($this->warnings, COUNT_RECURSIVE) . " warnings during the execution:\n";
+
+            foreach ($this->warnings as $stage => $stageWarnings) {
+                $warnings .= implode(
+                    "\n    ",
+                    array_map(
+                        fn (string $warning): string => sprintf("%s: %s", $stage, $warning),
+                        $stageWarnings,
+                    ),
+                );
+            }
+
+            $this->attachStepInfo($warnings);
+        }
     }
 
     private function mapStage(int $stage): string
@@ -73,5 +96,10 @@ class ExecutionLog
             case WorkflowState::STAGE_AFTER: return 'After';
             case WorkflowState::STAGE_SUMMARY: return "\nSummary";
         }
+    }
+
+    public function getWarnings(): array
+    {
+        return $this->warnings;
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PHPWorkflow\Stage;
 
 use Exception;
-use PHPWorkflow\Exception\WorkflowControl\ControlException;
 use PHPWorkflow\Exception\WorkflowControl\FailStepException;
 use PHPWorkflow\Exception\WorkflowControl\SkipStepException;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
@@ -36,22 +35,30 @@ abstract class Stage
                 $exception->getMessage(),
             );
 
-            // cancel the workflow during preparation
-            if ($exception instanceof FailStepException && $workflowState->getStage() <= WorkflowState::STAGE_PROCESS) {
-                throw $exception;
+            if ($exception instanceof FailStepException) {
+                // cancel the workflow during preparation
+                if ($workflowState->getStage() <= WorkflowState::STAGE_PROCESS) {
+                    throw $exception;
+                }
+
+                $workflowState->getExecutionLog()->addWarning(sprintf('Step failed (%s)', get_class($step)));
             }
 
             return;
         } catch (Exception $exception) {
             $workflowState->addExecutionLog(
                 $step->getDescription(),
-                $exception instanceof SkipWorkflowException ? ExecutionLog::STATE_SUCCESS : ExecutionLog::STATE_FAILED,
+                $exception instanceof SkipWorkflowException ? ExecutionLog::STATE_SKIPPED : ExecutionLog::STATE_FAILED,
                 $exception->getMessage(),
             );
 
-            // bubble up control exceptions or cancel the workflow during preparation
-            if ($exception instanceof ControlException || $workflowState->getStage() <= WorkflowState::STAGE_PROCESS) {
+            // cancel the workflow during preparation
+            if ($workflowState->getStage() <= WorkflowState::STAGE_PROCESS) {
                 throw $exception;
+            }
+
+            if (!($exception instanceof SkipWorkflowException)) {
+                $workflowState->getExecutionLog()->addWarning(sprintf('Step failed (%s)', get_class($step)));
             }
         }
 

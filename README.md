@@ -300,6 +300,8 @@ public function getWarnings(): array;
 public function getException(): ?Exception;
 // get the debug execution log of the workflow
 public function debug(): string;
+// access the container which was used for the workflow
+public function getContainer(): WorkflowContainer;
 ```
 
 As stated above workflows with failing steps before the **Process** stage will be aborted, otherwise the **Process** stage and all downstream stages will be executed.

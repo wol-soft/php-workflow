@@ -64,4 +64,9 @@ class WorkflowResult
     {
         return $this->exception;
     }
+
+    public function getContainer(): WorkflowContainer
+    {
+        return $this->workflowState->getWorkflowContainer();
+    }
 }

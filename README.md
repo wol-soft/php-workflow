@@ -72,8 +72,9 @@ Summary:
 
 Now let's check what exactly happens.
 Each step of your workflow is represented by an own class which implements the step.
-Each of these classes must implement the **\PHPWorkflow\Step\WorkflowStep** interface.
-Until you call the **executeWorkflow** method nothing will be executed.
+Steps may be used in multiple workflows (for example the **CurrentUserIsAllowedToEditPlaylistValidator** can be used in every workflow which modifies playlists).
+Each of these classes representing a single step must implement the **\PHPWorkflow\Step\WorkflowStep** interface.
+Until you call the **executeWorkflow** method no step will be executed.
 
 By calling the **executeWorkflow** method the workflow engine is triggered to start the execution with the first used stage.
 In our example the validations will be executed first.
@@ -163,6 +164,8 @@ $workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
 ```
 
 Another possibility would be to define a step in the **Prepare** stage (e.g. **PopulateAddSongToPlaylistContainer**) which populates the injected **WorkflowContainer** object.
+
+You can also extend the **WorkflowContainer** object to provide typed access to the data stored in the container.
 
 ## Stages
 

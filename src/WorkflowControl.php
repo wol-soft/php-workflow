@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWorkflow;
 
+use Exception;
 use PHPWorkflow\Exception\WorkflowControl\FailStepException;
 use PHPWorkflow\Exception\WorkflowControl\FailWorkflowException;
 use PHPWorkflow\Exception\WorkflowControl\SkipStepException;
@@ -80,9 +81,21 @@ class WorkflowControl
      * All warnings will be collected and shown in the workflow debug log.
      *
      * @param string $message
+     * @param Exception|null $exception An exception causing the warning
+     *                                  (if provided exception information will be added to the warning)
      */
-    public function warning(string $message): void
+    public function warning(string $message, ?Exception $exception = null): void
     {
+        if ($exception) {
+            $message .= sprintf(
+                " (%s%s in %s::%s)",
+                trim(strrchr(get_class($exception), '\\'), '\\'),
+                ($exception->getMessage() ? ": {$exception->getMessage()}" : ''),
+                $exception->getFile(),
+                $exception->getLine(),
+            );
+        }
+
         $this->executionLog->addWarning($message);
     }
 }

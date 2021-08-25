@@ -18,7 +18,10 @@ class ExecutionLog
     private array $stepInfo = [];
     /** @var string[][] Collect all warnings which occurred during the workflow execution */
     private array $warnings = [];
+    private int $warningsDuringStep = 0;
+
     private float $startAt;
+
     private WorkflowState $workflowState;
 
     public function __construct(WorkflowState $workflowState)
@@ -29,8 +32,9 @@ class ExecutionLog
     public function addStep(int $stage, string $step, string $state, ?string $reason): void {
         $stage = $this->mapStage($stage);
 
-        $this->stages[$stage][] = new Step($step, $state, $reason, $this->stepInfo);
+        $this->stages[$stage][] = new Step($step, $state, $reason, $this->stepInfo, $this->warningsDuringStep);
         $this->stepInfo = [];
+        $this->warningsDuringStep = 0;
     }
 
     public function __toString(): string
@@ -56,6 +60,7 @@ class ExecutionLog
     public function addWarning(string $message): void
     {
         $this->warnings[$this->mapStage($this->workflowState->getStage())][] = $message;
+        $this->warningsDuringStep++;
     }
 
     public function startExecution(): void
@@ -68,11 +73,15 @@ class ExecutionLog
         $this->attachStepInfo("Execution time: " . number_format(1000 * (microtime(true) - $this->startAt), 5) . 'ms');
 
         if ($this->warnings) {
-            $warnings = "Got " . count($this->warnings, COUNT_RECURSIVE) . " warnings during the execution:\n";
+            $warnings = sprintf(
+                "Got %s warning%s during the execution:\n        ",
+                $amount = count($this->warnings, COUNT_RECURSIVE) - count($this->warnings),
+                $amount > 1 ? 's' : '',
+            );
 
             foreach ($this->warnings as $stage => $stageWarnings) {
                 $warnings .= implode(
-                    "\n    ",
+                    "\n        ",
                     array_map(
                         fn (string $warning): string => sprintf("%s: %s", $stage, $warning),
                         $stageWarnings,

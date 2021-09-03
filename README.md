@@ -13,6 +13,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 * [Example workflow](#Example-workflow)
 * [Stages](#Stages)
 * [Workflow control](#Workflow-control)
+* [Nested workflows](#Nested-workflows)
 * [Error handling, logging and debugging](#Error-handling-logging-and-debugging)
 
 ## Installation
@@ -284,6 +285,32 @@ public function attachStepInfo(string $info): void
 // All warnings will be collected and shown in the workflow debug log.
 public function warning(string $message): void;
 ```
+
+## Nested workflows
+
+If some of your steps become more complex you may want to have a look into the `NestedWorkflow` wrapper which allows you to use a second workflow as a step of your workflow:
+
+```php
+$workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
+    ->validate(new CurrentUserIsAllowedToEditPlaylistValidator())
+    ->before(new \PHPWorkflow\Step\NestedWorkflow(
+        (new \PHPWorkflow\Workflow('AcceptOpenSuggestions'))
+            ->validate(new PlaylistAcceptsSuggestionsValidator())
+            ->before(new LoadOpenSuggestions())
+            ->process(new AcceptOpenSuggestions())
+            ->onSuccess(new NotifySuggestor())
+    ))
+    ->process(new AddSongToPlaylist())
+    ->onSuccess(new NotifySubscribers())
+    ->executeWorkflow();
+```
+
+Each nested workflow must be executable (contain at least one **Process** step).
+
+The debug log of your nested workflow will be embedded in the debug log of your main workflow.
+
+As you can see in the example you can't inject a **WorkflowContainer** into the nested workflow.
+The nested workflow has access to your main workflow container and can read or add data to the container.
 
 ## Error handling, logging and debugging
 

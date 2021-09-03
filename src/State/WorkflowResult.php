@@ -11,13 +11,16 @@ class WorkflowResult
     private bool $success;
     private WorkflowState $workflowState;
     private ?Exception $exception;
+    private string $workflowName;
 
     public function __construct(
+        string $workflowName,
         bool $success,
         bool $logErrors,
         WorkflowState $workflowState,
         ?Exception $exception = null
     ) {
+        $this->workflowName = $workflowName;
         $this->success = $success;
         $this->workflowState = $workflowState;
         $this->exception = $exception;
@@ -38,6 +41,11 @@ class WorkflowResult
                 );
             }
         }
+    }
+
+    public function getWorkflowName(): string
+    {
+        return $this->workflowName;
     }
 
     public function success(): bool

@@ -23,6 +23,14 @@ trait AllowNextExecuteWorkflow
             $workflowContainer = new WorkflowContainer();
         }
 
+        $workflowContainer->set(
+            '__internalExecutionConfiguration',
+            [
+                'throwOnFailure' => $throwOnFailure,
+                'logErrors' => $logErrors,
+            ],
+        );
+
         $workflowState = new WorkflowState($workflowContainer);
 
         try {
@@ -43,10 +51,16 @@ trait AllowNextExecuteWorkflow
             );
 
             if ($exception instanceof SkipWorkflowException) {
-                return new WorkflowResult(true, $logErrors, $workflowState);
+                return new WorkflowResult($workflowState->getWorkflowName(), true, $logErrors, $workflowState);
             }
 
-            $result = new WorkflowResult(false, $logErrors, $workflowState, $exception);
+            $result = new WorkflowResult(
+                $workflowState->getWorkflowName(),
+                false,
+                $logErrors,
+                $workflowState,
+                $exception,
+            );
 
             if ($throwOnFailure) {
                 throw new WorkflowException($result, "Workflow {$workflowState->getWorkflowName()} failed", $exception);
@@ -55,6 +69,6 @@ trait AllowNextExecuteWorkflow
             return $result;
         }
 
-        return new WorkflowResult(true, $logErrors, $workflowState);
+        return new WorkflowResult($workflowState->getWorkflowName(), true, $logErrors, $workflowState);
     }
 }

@@ -283,7 +283,9 @@ public function attachStepInfo(string $info): void
 
 // Add a warning to the workflow.
 // All warnings will be collected and shown in the workflow debug log.
-public function warning(string $message): void;
+// You can provide an additional exception which caused the warning.
+// If you provide the exception, exception details will be added to the debug log.
+public function warning(string $message, ?Exception $exception = null): void;
 ```
 
 ## Nested workflows

@@ -87,9 +87,10 @@ class WorkflowControl
     public function warning(string $message, ?Exception $exception = null): void
     {
         if ($exception) {
+            $exceptionClass = get_class($exception);
             $message .= sprintf(
                 " (%s%s in %s::%s)",
-                trim(strrchr(get_class($exception), '\\'), '\\'),
+                strstr($exceptionClass, '\\') ? trim(strrchr($exceptionClass, '\\'), '\\') : $exceptionClass,
                 ($exception->getMessage() ? ": {$exception->getMessage()}" : ''),
                 $exception->getFile(),
                 $exception->getLine(),

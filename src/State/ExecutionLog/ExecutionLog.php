@@ -57,10 +57,13 @@ class ExecutionLog
         $this->stepInfo[] = $info;
     }
 
-    public function addWarning(string $message): void
+    public function addWarning(string $message, bool $workflowReportWarning = false): void
     {
         $this->warnings[$this->mapStage($this->workflowState->getStage())][] = $message;
-        $this->warningsDuringStep++;
+
+        if (!$workflowReportWarning) {
+            $this->warningsDuringStep++;
+        }
     }
 
     public function startExecution(): void
@@ -74,16 +77,16 @@ class ExecutionLog
 
         if ($this->warnings) {
             $warnings = sprintf(
-                "Got %s warning%s during the execution:\n        ",
+                "Got %s warning%s during the execution:",
                 $amount = count($this->warnings, COUNT_RECURSIVE) - count($this->warnings),
                 $amount > 1 ? 's' : '',
             );
 
             foreach ($this->warnings as $stage => $stageWarnings) {
                 $warnings .= implode(
-                    "\n        ",
+                    '',
                     array_map(
-                        fn (string $warning): string => sprintf("%s: %s", $stage, $warning),
+                        fn (string $warning): string => sprintf("\n        %s: %s", $stage, $warning),
                         $stageWarnings,
                     ),
                 );
@@ -97,7 +100,7 @@ class ExecutionLog
     {
         switch ($stage) {
             case WorkflowState::STAGE_PREPARE: return 'Prepare';
-            case WorkflowState::STAGE_VALIDATION: return 'Validation';
+            case WorkflowState::STAGE_VALIDATE: return 'Validate';
             case WorkflowState::STAGE_BEFORE: return 'Before';
             case WorkflowState::STAGE_PROCESS: return 'Process';
             case WorkflowState::STAGE_ON_ERROR: return 'On Error';

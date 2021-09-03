@@ -34,7 +34,13 @@ class NestedWorkflow implements WorkflowStep
             $workflowResult = $exception->getWorkflowResult();
         }
 
-        $control->attachStepInfo(str_replace("\n", "\n      ", $workflowResult->debug()));
+        $control->attachStepInfo(
+            str_replace(
+                "\n      \n",
+                "\n\n",
+                str_replace("\n", "\n      ", $workflowResult->debug()),
+            ),
+        );
 
         if ($workflowResult->getWarnings()) {
             $warnings = count($workflowResult->getWarnings(), COUNT_RECURSIVE) - count($workflowResult->getWarnings());

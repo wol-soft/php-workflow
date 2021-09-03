@@ -41,7 +41,7 @@ abstract class Stage
                     throw $exception;
                 }
 
-                $workflowState->getExecutionLog()->addWarning(sprintf('Step failed (%s)', get_class($step)));
+                $workflowState->getExecutionLog()->addWarning(sprintf('Step failed (%s)', get_class($step)), true);
             }
 
             return;
@@ -58,8 +58,10 @@ abstract class Stage
             }
 
             if (!($exception instanceof SkipWorkflowException)) {
-                $workflowState->getExecutionLog()->addWarning(sprintf('Step failed (%s)', get_class($step)));
+                $workflowState->getExecutionLog()->addWarning(sprintf('Step failed (%s)', get_class($step)), true);
             }
+
+            return;
         }
 
         $workflowState->addExecutionLog($step->getDescription());

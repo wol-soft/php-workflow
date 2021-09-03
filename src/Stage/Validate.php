@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PHPWorkflow\Stage;
 
 use Exception;
+use PHPWorkflow\Exception\WorkflowControl\SkipStepException;
+use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
 use PHPWorkflow\Exception\WorkflowValidationException;
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Stage\Next\AllowNextBefore;
@@ -12,7 +14,7 @@ use PHPWorkflow\Stage\Next\AllowNextProcess;
 use PHPWorkflow\Step\WorkflowStep;
 use PHPWorkflow\Validator;
 
-class Validation extends Stage
+class Validate extends Stage
 {
     use
         AllowNextBefore,
@@ -29,7 +31,7 @@ class Validation extends Stage
 
     protected function runStage(WorkflowState $workflowState): ?Stage
     {
-        $workflowState->setStage(WorkflowState::STAGE_VALIDATION);
+        $workflowState->setStage(WorkflowState::STAGE_VALIDATE);
 
         // make sure hard validators are executed first
         usort($this->validators, function (Validator $validator, Validator $comparedValidator): int {
@@ -39,22 +41,23 @@ class Validation extends Stage
             return 0;
         });
 
+        $validationErrors = [];
         foreach ($this->validators as $validator) {
             if ($validator->isHardValidator()) {
                 $this->wrapStepExecution($validator->getStep(), $workflowState);
             } else {
-                $validationErrors = [];
-
                 try {
                     $this->wrapStepExecution($validator->getStep(), $workflowState);
+                } catch (SkipWorkflowException $exception) {
+                    throw $exception;
                 } catch (Exception $exception) {
                     $validationErrors[] = $exception;
                 }
-
-                if ($validationErrors) {
-                    throw new WorkflowValidationException($validationErrors);
-                }
             }
+        }
+
+        if ($validationErrors) {
+            throw new WorkflowValidationException($validationErrors);
         }
 
         return $this->nextStage;

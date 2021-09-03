@@ -13,7 +13,6 @@ interface ExecutableWorkflow
      */
     public function executeWorkflow(
         WorkflowContainer $workflowContainer = null,
-        bool $throwOnFailure = true,
-        bool $logErrors = true
+        bool $throwOnFailure = true
     ): WorkflowResult;
 }

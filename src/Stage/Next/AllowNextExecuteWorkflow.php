@@ -16,8 +16,7 @@ trait AllowNextExecuteWorkflow
 {
     public function executeWorkflow(
         WorkflowContainer $workflowContainer = null,
-        bool $throwOnFailure = true,
-        bool $logErrors = true
+        bool $throwOnFailure = true
     ): WorkflowResult {
         if (!$workflowContainer) {
             $workflowContainer = new WorkflowContainer();
@@ -27,7 +26,6 @@ trait AllowNextExecuteWorkflow
             '__internalExecutionConfiguration',
             [
                 'throwOnFailure' => $throwOnFailure,
-                'logErrors' => $logErrors,
             ],
         );
 
@@ -51,24 +49,22 @@ trait AllowNextExecuteWorkflow
             );
 
             if ($exception instanceof SkipWorkflowException) {
-                return new WorkflowResult($workflowState->getWorkflowName(), true, $logErrors, $workflowState);
+                return new WorkflowResult($workflowState->getWorkflowName(), true, $workflowState);
             }
 
-            $result = new WorkflowResult(
-                $workflowState->getWorkflowName(),
-                false,
-                $logErrors,
-                $workflowState,
-                $exception,
-            );
+            $result = new WorkflowResult($workflowState->getWorkflowName(), false, $workflowState, $exception);
 
             if ($throwOnFailure) {
-                throw new WorkflowException($result, "Workflow {$workflowState->getWorkflowName()} failed", $exception);
+                throw new WorkflowException(
+                    $result,
+                    "Workflow '{$workflowState->getWorkflowName()}' failed",
+                    $exception,
+                );
             }
 
             return $result;
         }
 
-        return new WorkflowResult($workflowState->getWorkflowName(), true, $logErrors, $workflowState);
+        return new WorkflowResult($workflowState->getWorkflowName(), true, $workflowState);
     }
 }

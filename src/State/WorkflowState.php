@@ -11,7 +11,7 @@ use PHPWorkflow\WorkflowControl;
 class WorkflowState
 {
     public const STAGE_PREPARE = 0;
-    public const STAGE_VALIDATION = 1;
+    public const STAGE_VALIDATE = 1;
     public const STAGE_BEFORE = 2;
     public const STAGE_PROCESS = 3;
     public const STAGE_ON_ERROR = 4;
@@ -20,7 +20,7 @@ class WorkflowState
     public const STAGE_SUMMARY = 7;
 
     private ?Exception $processException = null;
-    private int $stage = self::STAGE_VALIDATION;
+    private int $stage = self::STAGE_PREPARE;
     private WorkflowControl $workflowControl;
     private WorkflowContainer $workflowContainer;
 

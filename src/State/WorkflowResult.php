@@ -16,7 +16,6 @@ class WorkflowResult
     public function __construct(
         string $workflowName,
         bool $success,
-        bool $logErrors,
         WorkflowState $workflowState,
         ?Exception $exception = null
     ) {
@@ -24,55 +23,63 @@ class WorkflowResult
         $this->success = $success;
         $this->workflowState = $workflowState;
         $this->exception = $exception;
-
-        if ($logErrors) {
-            if ($this->hasWarnings()) {
-                trigger_error(
-                    "Workflow {$workflowState->getWorkflowName()} finished with warnings. Check the workflow debug log for more details.",
-                    E_USER_WARNING,
-                );
-            }
-
-            // don't add failures from validations to the error log
-            if (!$success && $workflowState->getStage() !== WorkflowState::STAGE_VALIDATION) {
-                trigger_error(
-                    "Workflow {$workflowState->getWorkflowName()} failed. Check the workflow debug log for more details.",
-                    E_USER_WARNING,
-                );
-            }
-        }
     }
 
+    /**
+     * Get the name of the executed workflow
+     */
     public function getWorkflowName(): string
     {
         return $this->workflowName;
     }
 
+    /**
+     * Check if the workflow has been executed successfully
+     */
     public function success(): bool
     {
         return $this->success;
     }
 
+    /**
+     * Get the full debug log for the workflow execution
+     */
     public function debug(): string
     {
         return (string) $this->workflowState->getExecutionLog();
     }
 
+    /**
+     * Check if the workflow execution has triggered warnings
+     */
     public function hasWarnings(): bool
     {
         return count($this->workflowState->getExecutionLog()->getWarnings()) > 0;
     }
 
+    /**
+     * Get all warnings of the workflow execution.
+     * Returns a nested array with all warnings grouped by stage.
+     *
+     * @return string[][]
+     */
     public function getWarnings(): array
     {
         return $this->workflowState->getExecutionLog()->getWarnings();
     }
 
+    /**
+     * Returns the exception which lead to a failed workflow.
+     * If the workflow was executed successfully null will be returned.
+     */
     public function getException(): ?Exception
     {
         return $this->exception;
     }
 
+    /**
+     * Get the container of the process
+     */
     public function getContainer(): WorkflowContainer
     {
         return $this->workflowState->getWorkflowContainer();

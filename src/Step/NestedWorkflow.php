@@ -28,7 +28,8 @@ class NestedWorkflow implements WorkflowStep
         try {
             $workflowResult = $this->nestedWorkflow->executeWorkflow(
                 $container,
-                ...$container->get('__internalExecutionConfiguration'),
+                // TODO: array unpacking via named arguments when dropping PHP7 support
+                $container->get('__internalExecutionConfiguration')['throwOnFailure'],
             );
         } catch (WorkflowException $exception) {
             $workflowResult = $exception->getWorkflowResult();

@@ -45,4 +45,4 @@ jobs:
         if: ${{ matrix.php == '8.0' }}
         run: sudo ./cc-test-reporter after-build -r $CC_TEST_REPORTER_ID
         env:
-          CC_TEST_REPORTER_ID: 5e32818628fac9eb11d34e2b35289f88169610cc4a98c6f170c74923342284f1
+          CC_TEST_REPORTER_ID: 2d364fb3d1b91ff1946425afbdc5bb1eb7dad8e02454cbd92cbb1a8fb661a439

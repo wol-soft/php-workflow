@@ -1,3 +1,10 @@
+[![Latest Version](https://img.shields.io/packagist/v/wol-soft/php-workflow.svg)](https://packagist.org/packages/wol-soft/php-workflow)
+[![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
+[![Maintainability](https://api.codeclimate.com/v1/badges/a7c6d1c276d2a6aba61e/maintainability)](https://codeclimate.com/github/wol-soft/php-workflow/maintainability)
+[![Build Status](https://github.com/wol-soft/php-workflow/actions/workflows/main.yml/badge.svg)](https://github.com/wol-soft/php-workflow/actions/workflows/main.yml)
+[![Coverage Status](https://coveralls.io/repos/github/wol-soft/php-workflow/badge.svg)](https://coveralls.io/github/wol-soft/php-workflow)
+[![MIT License](https://img.shields.io/packagist/l/wol-soft/php-workflow.svg)](https://github.com/wol-soft/php-workflow/blob/master/LICENSE)
+
 # php-workflow
 
 Create controlled workflows from small pieces.

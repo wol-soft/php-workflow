@@ -6,16 +6,19 @@ namespace PHPWorkflow\Step;
 
 use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\ExecutableWorkflow;
+use PHPWorkflow\State\NestedContainer;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\WorkflowControl;
 
 class NestedWorkflow implements WorkflowStep
 {
     private ExecutableWorkflow $nestedWorkflow;
+    private ?WorkflowContainer $container;
 
-    public function __construct(ExecutableWorkflow $nestedWorkflow)
+    public function __construct(ExecutableWorkflow $nestedWorkflow, ?WorkflowContainer $container = null)
     {
         $this->nestedWorkflow = $nestedWorkflow;
+        $this->container = $container;
     }
 
     public function getDescription(): string
@@ -27,7 +30,7 @@ class NestedWorkflow implements WorkflowStep
     {
         try {
             $workflowResult = $this->nestedWorkflow->executeWorkflow(
-                $container,
+                new NestedContainer($container, $this->container),
                 // TODO: array unpacking via named arguments when dropping PHP7 support
                 $container->get('__internalExecutionConfiguration')['throwOnFailure'],
             );

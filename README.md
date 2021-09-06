@@ -300,6 +300,9 @@ public function warning(string $message, ?Exception $exception = null): void;
 If some of your steps become more complex you may want to have a look into the `NestedWorkflow` wrapper which allows you to use a second workflow as a step of your workflow:
 
 ```php
+$parentWorkflowContainer = (new \PHPWorkflow\State\WorkflowContainer())->set('parent-data', 'Hello');
+$nestedWorkflowContainer = (new \PHPWorkflow\State\WorkflowContainer())->set('nested-data', 'World');
+
 $workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
     ->validate(new CurrentUserIsAllowedToEditPlaylistValidator())
     ->before(new \PHPWorkflow\Step\NestedWorkflow(
@@ -307,19 +310,22 @@ $workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
             ->validate(new PlaylistAcceptsSuggestionsValidator())
             ->before(new LoadOpenSuggestions())
             ->process(new AcceptOpenSuggestions())
-            ->onSuccess(new NotifySuggestor())
+            ->onSuccess(new NotifySuggestor()),
+        $nestedWorkflowContainer,
     ))
     ->process(new AddSongToPlaylist())
     ->onSuccess(new NotifySubscribers())
-    ->executeWorkflow();
+    ->executeWorkflow($parentWorkflowContainer);
 ```
 
 Each nested workflow must be executable (contain at least one **Process** step).
 
 The debug log of your nested workflow will be embedded in the debug log of your main workflow.
 
-As you can see in the example you can't inject a **WorkflowContainer** into the nested workflow.
-The nested workflow has access to your main workflow container and can read or add data to the container.
+As you can see in the example you can inject a dedicated **WorkflowContainer** into the nested workflow.
+The nested workflow will gain access to a merged **WorkflowContainer** which provides all data and methods of your main workflow container and your nested container.
+If you add additional data to the merged container the data will be present in your main workflow container after the nested workflow execution has been completed.
+For example your implementations of the steps used in the nested workflow will have access to the keys `nested-data` and `parent-data`.
 
 ## Error handling, logging and debugging
 

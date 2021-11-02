@@ -5,23 +5,26 @@ declare(strict_types=1);
 namespace PHPWorkflow\State;
 
 use Exception;
+use PHPWorkflow\State\ExecutionLog\ExecutionLog;
 
 class WorkflowResult
 {
     private bool $success;
-    private WorkflowState $workflowState;
     private ?Exception $exception;
     private string $workflowName;
+    private ExecutionLog $executionLog;
+    private WorkflowContainer $workflowContainer;
 
     public function __construct(
-        string $workflowName,
-        bool $success,
         WorkflowState $workflowState,
+        bool $success,
         ?Exception $exception = null
     ) {
-        $this->workflowName = $workflowName;
+        $this->workflowName = $workflowState->getWorkflowName();
+        $this->executionLog = $workflowState->getExecutionLog();
+        $this->workflowContainer = $workflowState->getWorkflowContainer();
+
         $this->success = $success;
-        $this->workflowState = $workflowState;
         $this->exception = $exception;
     }
 
@@ -46,7 +49,7 @@ class WorkflowResult
      */
     public function debug(): string
     {
-        return (string) $this->workflowState->getExecutionLog();
+        return (string) $this->executionLog;
     }
 
     /**
@@ -54,7 +57,7 @@ class WorkflowResult
      */
     public function hasWarnings(): bool
     {
-        return count($this->workflowState->getExecutionLog()->getWarnings()) > 0;
+        return count($this->executionLog->getWarnings()) > 0;
     }
 
     /**
@@ -65,7 +68,7 @@ class WorkflowResult
      */
     public function getWarnings(): array
     {
-        return $this->workflowState->getExecutionLog()->getWarnings();
+        return $this->executionLog->getWarnings();
     }
 
     /**
@@ -82,6 +85,6 @@ class WorkflowResult
      */
     public function getContainer(): WorkflowContainer
     {
-        return $this->workflowState->getWorkflowContainer();
+        return $this->workflowContainer;
     }
 }

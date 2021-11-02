@@ -49,10 +49,10 @@ trait AllowNextExecuteWorkflow
             );
 
             if ($exception instanceof SkipWorkflowException) {
-                return new WorkflowResult($workflowState->getWorkflowName(), true, $workflowState);
+                return $workflowState->close(true);
             }
 
-            $result = new WorkflowResult($workflowState->getWorkflowName(), false, $workflowState, $exception);
+            $result = $workflowState->close(false, $exception);
 
             if ($throwOnFailure) {
                 throw new WorkflowException(
@@ -65,6 +65,6 @@ trait AllowNextExecuteWorkflow
             return $result;
         }
 
-        return new WorkflowResult($workflowState->getWorkflowName(), true, $workflowState);
+        return $workflowState->close(true);
     }
 }

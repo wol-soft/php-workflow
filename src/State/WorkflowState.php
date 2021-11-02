@@ -28,11 +28,27 @@ class WorkflowState
     private string $workflowName;
     private array $middlewares = [];
 
+    private static array $runningWorkflows = [];
+
     public function __construct(WorkflowContainer $workflowContainer)
     {
         $this->executionLog = new ExecutionLog($this);
         $this->workflowControl = new WorkflowControl($this->executionLog);
         $this->workflowContainer = $workflowContainer;
+
+        self::$runningWorkflows[] = $this;
+    }
+
+    public function close(bool $success, ?Exception $exception = null): WorkflowResult
+    {
+        array_pop(self::$runningWorkflows);
+
+        return new WorkflowResult($this, $success, $exception);
+    }
+
+    public static function getRunningWorkflow(): ?self
+    {
+        return self::$runningWorkflows ? end(self::$runningWorkflows) : null;
     }
 
     public function getProcessException(): ?Exception

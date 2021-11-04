@@ -21,6 +21,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 * [Stages](#Stages)
 * [Workflow control](#Workflow-control)
 * [Nested workflows](#Nested-workflows)
+* [Loops](#Loops)
 * [Error handling, logging and debugging](#Error-handling-logging-and-debugging)
 
 ## Installation
@@ -326,6 +327,74 @@ As you can see in the example you can inject a dedicated **WorkflowContainer** i
 The nested workflow will gain access to a merged **WorkflowContainer** which provides all data and methods of your main workflow container and your nested container.
 If you add additional data to the merged container the data will be present in your main workflow container after the nested workflow execution has been completed.
 For example your implementations of the steps used in the nested workflow will have access to the keys `nested-data` and `parent-data`.
+
+## Loops
+
+If you handle multiple entities in your workflows at once you may need loops.
+An approach would be to set up a single step which contains the loop and all logic which is required to be executed in a loop.
+But if there are multiple steps required to be executed in the loop you may want to split the step into various steps.
+By using the `Loop` class you can execute multiple steps in a loop.
+For example let's assume our `AddSongToPlaylist` becomes a `AddSongsToPlaylist` workflow which can add multiple songs at once:
+
+```php
+$workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
+    ->validate(new CurrentUserIsAllowedToEditPlaylistValidator())
+    ->process(
+        (new \PHPWorkflow\Step\Loop(new SongLoop()))
+            ->addStep(new AddSongToPlaylist())
+            ->addStep(new ClearSongCache())
+    )
+    ->onSuccess(new NotifySubscribers())
+    ->executeWorkflow($parentWorkflowContainer);
+```
+
+Our process step now implements a loop controlled by the `SongLoop` class.
+The loop contains our two steps `AddSongToPlaylist` and `ClearSongCache`.
+The implementation of the `SongLoop` class must implement the `PHPWorkflow\Step\LoopControl` interface.
+Let's have a look at an example implementation:
+
+```php
+class SongLoop implements \PHPWorkflow\Step\LoopControl {
+    /**
+     * As well as each step also each loop must provide a description.
+     */
+    public function getDescription(): string
+    {
+        return 'Loop over all provided songs';
+    }
+
+    /**
+     * This method will be called before each loop run.
+     * $iteration will contain the current iteration (0 on first run etc)
+     * You have access to the WorkflowControl and the WorkflowContainer.
+     * If the method returns true the next iteration will be executed.
+     * Otherwise the loop is completed.
+     */
+    public function executeNextIteration(
+        int $iteration,
+        \PHPWorkflow\WorkflowControl $control,
+        \PHPWorkflow\State\WorkflowContainer $container
+    ): bool {
+        $songs = $container->get('songs');
+
+        // no songs in container - end the loop
+        if (empty($songs)) {
+            return false;
+        }
+
+        // add the current song to the container so the steps
+        // of the loop can access the entry
+        $container->set('currentSong', array_shift($songs));
+
+        // update the songs entry to handle the songs step by step
+        $container->set('songs', $songs);
+
+        return true;
+    }
+}
+```
+
+A loop step may contain a nested workflow if you need more complex steps.
 
 ## Error handling, logging and debugging
 

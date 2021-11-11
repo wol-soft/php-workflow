@@ -20,12 +20,15 @@ class WorkflowState
     public const STAGE_SUMMARY = 7;
 
     private ?Exception $processException = null;
+
+    private string $workflowName;
     private int $stage = self::STAGE_PREPARE;
+    private int $inLoop = 0;
+
     private WorkflowControl $workflowControl;
     private WorkflowContainer $workflowContainer;
-
     private ExecutionLog $executionLog;
-    private string $workflowName;
+
     private array $middlewares = [];
 
     private static array $runningWorkflows = [];
@@ -33,7 +36,7 @@ class WorkflowState
     public function __construct(WorkflowContainer $workflowContainer)
     {
         $this->executionLog = new ExecutionLog($this);
-        $this->workflowControl = new WorkflowControl($this->executionLog);
+        $this->workflowControl = new WorkflowControl($this);
         $this->workflowContainer = $workflowContainer;
 
         self::$runningWorkflows[] = $this;
@@ -112,5 +115,15 @@ class WorkflowState
     public function getMiddlewares(): array
     {
         return $this->middlewares;
+    }
+
+    public function isInLoop(): bool
+    {
+        return $this->inLoop > 0;
+    }
+
+    public function setInLoop(bool $inLoop): void
+    {
+        $this->inLoop += $inLoop ? 1 : -1;
     }
 }

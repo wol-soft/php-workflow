@@ -6,6 +6,7 @@ namespace PHPWorkflow\Step;
 
 use Exception;
 use PHPWorkflow\Exception\WorkflowControl\FailStepException;
+use PHPWorkflow\Exception\WorkflowControl\LoopControlException;
 use PHPWorkflow\Exception\WorkflowControl\SkipStepException;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
@@ -30,6 +31,11 @@ trait StepExecutionTrait
                 }
 
                 $workflowState->getExecutionLog()->addWarning(sprintf('Step failed (%s)', get_class($step)), true);
+            }
+
+            // bubble up the exception so the loop control can handle the exception
+            if ($exception instanceof LoopControlException) {
+                throw $exception;
             }
 
             return;

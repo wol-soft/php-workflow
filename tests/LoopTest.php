@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\Tests;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\Step\Loop;
@@ -181,6 +182,209 @@ class LoopTest extends TestCase
         );
     }
 
+    public function testContinue(): void
+    {
+        $container = (new WorkflowContainer())->set('entries', ['a', 'b', 'c']);
+
+        $result = (new Workflow('test'))
+            ->process(
+                (new Loop($this->entryLoopControl()))
+                    ->addStep(
+                        $this->setupStep(
+                            'process-test',
+                            function (WorkflowControl $control, WorkflowContainer $container) {
+                                if ($container->get('entry') === 'b') {
+                                    $control->continue('Skip reason');
+                                }
+
+                                $control->attachStepInfo('Process entry');
+                            },
+                        )
+                    )
+                    ->addStep($this->setupEmptyStep('Post-Process entry'))
+            )
+            ->executeWorkflow($container);
+
+        $this->assertTrue($result->success());
+        $this->assertDebugLog(
+            <<<DEBUG
+            Process log for workflow 'test':
+            Process:
+              - process-test: ok
+                - Process entry
+              - Post-Process entry: ok
+              - Loop iteration #1: ok
+              - process-test: skipped (Skip reason)
+              - Loop iteration #2: skipped (Skip reason)
+              - process-test: ok
+                - Process entry
+              - Post-Process entry: ok
+              - Loop iteration #3: ok
+              - process-loop: ok
+                - Loop finished after 3 iterations
+            
+            Summary:
+              - Workflow execution: ok
+                - Execution time: *
+            DEBUG,
+            $result,
+        );
+    }
+
+    public function testContinueInLoopControl(): void
+    {
+        $container = (new WorkflowContainer())->set('entries', ['a', 'b', 'c']);
+
+        $result = (new Workflow('test'))
+            ->process(
+                (new Loop(
+                    $this->setupLoop(
+                        'process-loop',
+                        function (WorkflowControl $control, WorkflowContainer $container) {
+                            $entries = $container->get('entries');
+
+                            if (empty($entries)) {
+                                return false;
+                            }
+
+                            $entry = array_shift($entries);
+                            $container->set('entries', $entries);
+
+                            if ($entry === 'b') {
+                                $control->continue('Skip reason');
+                            }
+
+                            return true;
+                        },
+                    )
+                ))
+                    ->addStep($this->setupEmptyStep('process 1'))
+                    ->addStep($this->setupEmptyStep('process 2'))
+            )
+            ->executeWorkflow($container);
+
+        $this->assertTrue($result->success());
+        $this->assertDebugLog(
+            <<<DEBUG
+            Process log for workflow 'test':
+            Process:
+              - process 1: ok
+              - process 2: ok
+              - Loop iteration #1: ok
+              - Loop iteration #2: skipped (Skip reason)
+              - process 1: ok
+              - process 2: ok
+              - Loop iteration #3: ok
+              - process-loop: ok
+                - Loop finished after 3 iterations
+            
+            Summary:
+              - Workflow execution: ok
+                - Execution time: *
+            DEBUG,
+            $result,
+        );
+    }
+
+    public function testBreak(): void
+    {
+        $container = (new WorkflowContainer())->set('entries', ['a', 'b', 'c']);
+
+        $result = (new Workflow('test'))
+            ->process(
+                (new Loop($this->entryLoopControl()))
+                    ->addStep(
+                        $this->setupStep(
+                            'process-test',
+                            function (WorkflowControl $control, WorkflowContainer $container) {
+                                if ($container->get('entry') === 'b') {
+                                    $control->break('break reason');
+                                }
+
+                                $control->attachStepInfo('Process entry');
+                            },
+                        )
+                    )
+                    ->addStep($this->setupEmptyStep('Post-Process entry'))
+            )
+            ->executeWorkflow($container);
+
+        $this->assertTrue($result->success());
+        $this->assertDebugLog(
+            <<<DEBUG
+            Process log for workflow 'test':
+            Process:
+              - process-test: ok
+                - Process entry
+              - Post-Process entry: ok
+              - Loop iteration #1: ok
+              - process-test: skipped (break reason)
+              - Loop iteration #2: skipped (break reason)
+              - process-loop: ok
+                - Loop break in iteration #2
+                - Loop finished after 2 iterations
+            
+            Summary:
+              - Workflow execution: ok
+                - Execution time: *
+            DEBUG,
+            $result,
+        );
+    }
+
+    public function testBreakInLoopControl(): void
+    {
+        $container = (new WorkflowContainer())->set('entries', ['a', 'b', 'c']);
+
+        $result = (new Workflow('test'))
+            ->process(
+                (new Loop(
+                    $this->setupLoop(
+                        'process-loop',
+                        function (WorkflowControl $control, WorkflowContainer $container) {
+                            $entries = $container->get('entries');
+
+                            if (empty($entries)) {
+                                return false;
+                            }
+
+                            $entry = array_shift($entries);
+                            $container->set('entries', $entries);
+
+                            if ($entry === 'b') {
+                                $control->break('Break reason');
+                            }
+
+                            return true;
+                        },
+                    )
+                ))
+                    ->addStep($this->setupEmptyStep('process 1'))
+                    ->addStep($this->setupEmptyStep('process 2'))
+            )
+            ->executeWorkflow($container);
+
+        $this->assertTrue($result->success());
+        $this->assertDebugLog(
+            <<<DEBUG
+            Process log for workflow 'test':
+            Process:
+              - process 1: ok
+              - process 2: ok
+              - Loop iteration #1: ok
+              - Loop iteration #2: skipped (Break reason)
+              - process-loop: ok
+                - Loop break in iteration #2
+                - Loop finished after 2 iterations
+            
+            Summary:
+              - Workflow execution: ok
+                - Execution time: *
+            DEBUG,
+            $result,
+        );
+    }
+
     public function testSkipStepInLoop(): void
     {
         $container = (new WorkflowContainer())->set('entries', ['a', null, 'c']);
@@ -252,13 +456,17 @@ class LoopTest extends TestCase
         );
     }
 
-    public function testSkipWorkflowInLoop(): void
+    /**
+     * @dataProvider continueOnErrorDataProvider test with both settings as skipWorkflow must work independently of the
+     *                                           selected error handling mode
+     */
+    public function testSkipWorkflowInLoop(bool $continueOnError): void
     {
         $container = (new WorkflowContainer())->set('entries', ['a', null, 'c']);
 
         $result = (new Workflow('test'))
             ->process(
-                (new Loop($this->entryLoopControl()))
+                (new Loop($this->entryLoopControl(), $continueOnError))
                     ->addStep(
                         $this->setupStep(
                             'process-test',
@@ -290,7 +498,11 @@ class LoopTest extends TestCase
         );
     }
 
-    public function testSkipWorkflowInLoopControl(): void
+    /**
+     * @dataProvider continueOnErrorDataProvider test with both settings as skipWorkflow must work independently of the
+     *                                           selected error handling mode
+     */
+    public function testSkipWorkflowInLoopControl(bool $continueOnError): void
     {
         $result = (new Workflow('test'))
             ->process(
@@ -298,7 +510,8 @@ class LoopTest extends TestCase
                     $this->setupLoop(
                         'process-loop',
                         fn (WorkflowControl $control) => $control->skipWorkflow('skip reason'),
-                    )
+                    ),
+                    $continueOnError,
                 ))
                     ->addStep($this->processEntry())
             )
@@ -319,7 +532,10 @@ class LoopTest extends TestCase
         );
     }
 
-    public function testFailInLoop(): void
+    /**
+     * @dataProvider failDataProvider
+     */
+    public function testFailInLoop(callable $failingStep): void
     {
         $container = (new WorkflowContainer())->set('entries', ['a', null, 'c']);
 
@@ -329,13 +545,13 @@ class LoopTest extends TestCase
                     ->addStep(
                         $this->setupStep(
                             'process-test',
-                            function (WorkflowControl $control, WorkflowContainer $container) {
+                            function (WorkflowControl $control, WorkflowContainer $container) use ($failingStep) {
                                 if (!$container->get('entry')) {
                                     $control->attachStepInfo(
                                         sprintf('got value %s', var_export($container->get('entry'), true))
                                     );
 
-                                    $control->failStep('no entry');
+                                    $failingStep($control);
                                 }
                             },
                         )
@@ -351,30 +567,114 @@ class LoopTest extends TestCase
             Process:
               - process-test: ok
               - Loop iteration #1: ok
-              - process-test: failed (no entry)
+              - process-test: failed (Fail Message)
                 - got value NULL
-              - process-loop: failed (no entry)
+              - process-loop: failed (Fail Message)
             
             Summary:
-              - Workflow execution: failed (no entry)
+              - Workflow execution: failed (Fail Message)
                 - Execution time: *
             DEBUG,
             $result,
         );
     }
 
-    public function testFailInLoopControl(): void
+    /**
+     * @dataProvider failStepDataProvider
+     */
+    public function testFailInLoopWithContinueOnError(callable $failingStep): void
     {
         $container = (new WorkflowContainer())->set('entries', ['a', null, 'c']);
 
         $result = (new Workflow('test'))
             ->process(
-                (new Loop(
-                    $this->setupLoop(
-                        'process-loop',
-                        fn (WorkflowControl $control) => $control->failStep('fail reason'),
+                (new Loop($this->entryLoopControl(), true))
+                    ->addStep(
+                        $this->setupStep(
+                            'process-test',
+                            function (WorkflowControl $control, WorkflowContainer $container) use ($failingStep) {
+                                if (!$container->get('entry')) {
+                                    $failingStep($control);
+                                }
+                            },
+                        )
                     )
-                ))
+            )
+            ->executeWorkflow($container, false);
+
+        $this->assertTrue($result->success());
+        $this->assertDebugLog(
+            <<<DEBUG
+            Process log for workflow 'test':
+            Process:
+              - process-test: ok
+              - Loop iteration #1: ok
+              - process-test: failed (Fail Message)
+              - Loop iteration #2: failed (Fail Message) (1 warning)
+              - process-test: ok
+              - Loop iteration #3: ok
+              - process-loop: ok
+                - Loop finished after 3 iterations
+            
+            Summary:
+              - Workflow execution: ok
+                - Execution time: *
+                - Got 1 warning during the execution:
+                    Process: Loop iteration #2 failed. Continued execution.
+            DEBUG,
+            $result,
+        );
+    }
+
+    public function testFailWorkflowInLoopWithContinueOnError(): void
+    {
+        $container = (new WorkflowContainer())->set('entries', ['a', null, 'c']);
+
+        $result = (new Workflow('test'))
+            ->process(
+                (new Loop($this->entryLoopControl(), true))
+                    ->addStep(
+                        $this->setupStep(
+                            'process-test',
+                            function (WorkflowControl $control, WorkflowContainer $container): void {
+                                if (!$container->get('entry')) {
+                                    $control->failWorkflow('Fail Message');
+                                }
+                            },
+                        )
+                    )
+            )
+            ->executeWorkflow($container, false);
+
+        $this->assertFalse($result->success());
+        $this->assertNotNull($result->getException());
+        $this->assertDebugLog(
+            <<<DEBUG
+            Process log for workflow 'test':
+            Process:
+              - process-test: ok
+              - Loop iteration #1: ok
+              - process-test: failed (Fail Message)
+              - process-loop: failed (Fail Message)
+            
+            Summary:
+              - Workflow execution: failed (Fail Message)
+                - Execution time: *
+            DEBUG,
+            $result,
+        );
+    }
+
+    /**
+     * @dataProvider failDataProvider
+     */
+    public function testFailInLoopControl(callable $failingStep): void
+    {
+        $container = (new WorkflowContainer())->set('entries', ['a', null, 'c']);
+
+        $result = (new Workflow('test'))
+            ->process(
+                (new Loop($this->setupLoop('process-loop', $failingStep)))
                     ->addStep($this->processEntry())
             )
             ->executeWorkflow($container, false);
@@ -385,14 +685,94 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-loop: failed (fail reason)
+              - process-loop: failed (Fail Message)
             
             Summary:
-              - Workflow execution: failed (fail reason)
+              - Workflow execution: failed (Fail Message)
                 - Execution time: *
             DEBUG,
             $result,
         );
+    }
+
+    /**
+     * @dataProvider failStepDataProvider
+     */
+    public function testFailInLoopControlWithContinueOnError(callable $failingStep): void
+    {
+        $container = (new WorkflowContainer())->set('entries', ['a', null, 'c']);
+
+        $result = (new Workflow('test'))
+            ->process(
+                (new Loop(
+                    $this->setupLoop(
+                        'process-loop',
+                        function (WorkflowControl $control, WorkflowContainer $container) use ($failingStep): bool {
+                            $entries = $container->get('entries');
+
+                            if (empty($entries)) {
+                                return false;
+                            }
+
+                            $container->set('entry', array_shift($entries));
+                            $container->set('entries', $entries);
+
+                            if (!$container->get('entry')) {
+                                $failingStep($control);
+                            }
+
+                            return true;
+                        },
+                    ),
+                    true,
+                ))
+                    ->addStep($this->processEntry())
+            )
+            ->executeWorkflow($container, false);
+
+        $this->assertTrue($result->success());
+
+        $this->assertDebugLog(
+            <<<DEBUG
+            Process log for workflow 'test':
+            Process:
+              - process-test: ok
+                - Process entry a
+              - Loop iteration #1: ok
+              - Loop iteration #2: failed (Fail Message) (1 warning)
+              - process-test: ok
+                - Process entry c
+              - Loop iteration #3: ok
+              - process-loop: ok
+                - Loop finished after 3 iterations
+            
+            Summary:
+              - Workflow execution: ok
+                - Execution time: *
+                - Got 1 warning during the execution:
+                    Process: Loop iteration #2 failed. Continued execution.
+            DEBUG,
+            $result,
+        );
+    }
+
+    public function continueOnErrorDataProvider(): array
+    {
+        return [
+            "Default (don't continue)" => [false],
+            "Continue on failure" => [true],
+        ];
+    }
+
+
+    public function failStepDataProvider(): array
+    {
+        return [
+            'By Exception' => [function (): void {
+                throw new InvalidArgumentException('Fail Message');
+            }],
+            'By failing step' => [fn (WorkflowControl $control) => $control->failStep('Fail Message')],
+        ];
     }
 
     private function entryLoopControl(): LoopControl

@@ -156,7 +156,7 @@ class WorkflowTest extends TestCase
     }
 
     /**
-     * @dataProvider failingStepDataProvider
+     * @dataProvider failDataProvider
      */
     public function testFailingPreparationCancelsWorkflow(callable $failingStep): void
     {
@@ -185,7 +185,7 @@ class WorkflowTest extends TestCase
     }
 
     /**
-     * @dataProvider failingStepDataProvider
+     * @dataProvider failDataProvider
      */
     public function testFailingHardValidationCancelsWorkflow(callable $failingStep): void
     {
@@ -214,7 +214,7 @@ class WorkflowTest extends TestCase
     }
 
     /**
-     * @dataProvider failingStepDataProvider
+     * @dataProvider failDataProvider
      */
     public function testFailingSoftValidationsAreCollected(callable $failingStep): void
     {
@@ -255,7 +255,7 @@ class WorkflowTest extends TestCase
 
 
     /**
-     * @dataProvider failingStepDataProvider
+     * @dataProvider failDataProvider
      */
     public function testFailingBeforeCancelsWorkflow(callable $failingStep): void
     {
@@ -284,7 +284,7 @@ class WorkflowTest extends TestCase
     }
 
     /**
-     * @dataProvider failingStepDataProvider
+     * @dataProvider failDataProvider
      */
     public function testFailingProcess(callable $failingStep): void
     {
@@ -362,7 +362,7 @@ class WorkflowTest extends TestCase
     }
 
     /**
-     * @dataProvider failingStepDataProvider
+     * @dataProvider failDataProvider
      */
     public function testFailuresAfterProcessDontAffectOtherStepsForFailedProcess(callable $failingStep): void
     {
@@ -400,7 +400,7 @@ class WorkflowTest extends TestCase
     }
 
     /**
-     * @dataProvider failingStepDataProvider
+     * @dataProvider failDataProvider
      */
     public function testFailuresAfterProcessDontAffectOtherStepsForSuccessfulProcess(callable $failingStep): void
     {
@@ -435,17 +435,6 @@ class WorkflowTest extends TestCase
             DEBUG,
             $result,
         );
-    }
-
-    public function failingStepDataProvider(): array
-    {
-        return [
-            'By Exception' => [function (WorkflowControl $control) {
-                throw new InvalidArgumentException('Fail Message');
-            }],
-            'By failing step' => [fn (WorkflowControl $control) => $control->failStep('Fail Message')],
-            'By failing workflow' => [fn (WorkflowControl $control) => $control->failWorkflow('Fail Message')],
-        ];
     }
 
     public function testInjectingWorkflowContainer(): void
@@ -491,17 +480,20 @@ class WorkflowTest extends TestCase
         );
     }
 
-    public function testSkipStep(): void
+    /**
+     * @dataProvider skipFunctionDataProvider
+     */
+    public function testSkipStep(string $skipFunction): void
     {
         $result = (new Workflow('test'))
             ->validate($this->setupStep(
                 'validate-test1',
-                fn (WorkflowControl $control) => $control->skipStep('skip-reason 1'),
+                fn (WorkflowControl $control) => $control->$skipFunction('skip-reason 1'),
             ), true)
             ->validate($this->setupEmptyStep('validate-test2'))
             ->validate($this->setupStep(
                 'validate-test3',
-                fn (WorkflowControl $control) => $control->skipStep('skip-reason 2'),
+                fn (WorkflowControl $control) => $control->$skipFunction('skip-reason 2'),
             ))
             ->process($this->setupEmptyStep('process-test'))
             ->executeWorkflow(null, false);
@@ -523,6 +515,15 @@ class WorkflowTest extends TestCase
             DEBUG,
             $result,
         );
+    }
+
+    public function skipFunctionDataProvider(): array
+    {
+        return [
+            'skipStep' => ['skipStep'],
+            'continue' => ['continue'],
+            'break' => ['break'],
+        ];
     }
 
     public function testSkipWorkflow(): void

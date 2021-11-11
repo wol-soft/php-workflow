@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace PHPWorkflow;
 
 use Exception;
+use PHPWorkflow\Exception\WorkflowControl\BreakException;
+use PHPWorkflow\Exception\WorkflowControl\ContinueException;
 use PHPWorkflow\Exception\WorkflowControl\FailStepException;
 use PHPWorkflow\Exception\WorkflowControl\FailWorkflowException;
 use PHPWorkflow\Exception\WorkflowControl\SkipStepException;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
-use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\State\WorkflowState;
 
 class WorkflowControl
 {
-    private ExecutionLog $executionLog;
+    private WorkflowState $workflowState;
 
-    public function __construct(ExecutionLog $executionLog)
+    public function __construct(WorkflowState $workflowState)
     {
-        $this->executionLog = $executionLog;
+        $this->workflowState = $workflowState;
     }
 
     /**
@@ -66,6 +68,36 @@ class WorkflowControl
     }
 
     /**
+     * If in a loop the current iteration is cancelled and the next iteration is started. If the step is not part of a
+     * loop the step is skipped.
+     *
+     * @param string $reason
+     */
+    public function continue(string $reason): void
+    {
+        if ($this->workflowState->isInLoop()) {
+            throw new ContinueException($reason);
+        }
+
+        $this->skipStep($reason);
+    }
+
+    /**
+     * If in a loop the loop is cancelled and the next step after the loop is executed. If the step is not part of a
+     * loop the step is skipped.
+     *
+     * @param string $reason
+     */
+    public function break(string $reason): void
+    {
+        if ($this->workflowState->isInLoop()) {
+            throw new BreakException($reason);
+        }
+
+        $this->skipStep($reason);
+    }
+
+    /**
      * Attach any additional debug info to your current step.
      * Info will be shown in the workflow debug log.
      *
@@ -73,7 +105,7 @@ class WorkflowControl
      */
     public function attachStepInfo(string $info): void
     {
-        $this->executionLog->attachStepInfo($info);
+        $this->workflowState->getExecutionLog()->attachStepInfo($info);
     }
 
     /**
@@ -97,6 +129,6 @@ class WorkflowControl
             );
         }
 
-        $this->executionLog->addWarning($message);
+        $this->workflowState->getExecutionLog()->addWarning($message);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\Tests;
 
+use InvalidArgumentException;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\State\WorkflowResult;
 use PHPWorkflow\Step\LoopControl;
@@ -67,11 +68,32 @@ trait WorkflowTestTrait
         };
     }
 
+    public function failDataProvider(): array
+    {
+        return [
+            'By Exception' => [function () {
+                throw new InvalidArgumentException('Fail Message');
+            }],
+            'By failing step' => [fn (WorkflowControl $control) => $control->failStep('Fail Message')],
+            'By failing workflow' => [fn (WorkflowControl $control) => $control->failWorkflow('Fail Message')],
+        ];
+    }
+
     private function assertDebugLog(string $expected, WorkflowResult $result): void
     {
         $this->assertSame(
             $expected,
-            preg_replace('#[\w\\\\]+@anonymous[^)]+#', 'anonClass', preg_replace('/[\d.]+ms/', '*', $result->debug())),
+            preg_replace(
+                [
+                    '#[\w\\\\]+@anonymous[^)]+#',
+                    '/[\d.]+ms/',
+                ],
+                [
+                    'anonClass',
+                    '*',
+                ],
+                $result->debug(),
+            ),
         );
     }
 }

@@ -23,6 +23,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 * [Nested workflows](#Nested-workflows)
 * [Loops](#Loops)
 * [Error handling, logging and debugging](#Error-handling-logging-and-debugging)
+* [Tests](#Tests)
 
 ## Installation
 
@@ -285,6 +286,14 @@ public function failWorkflow(string $reason): void;
 // it's handled like a skipped step.
 public function skipWorkflow(string $reason): void;
 
+// Useful when using loops to cancel the current iteration (all upcoming steps).
+// If used outside a loop, it behaves like skipStep.
+public function continue(string $reason): void;
+
+// Useful when using loops to break the loop (all upcoming steps and iterations).
+// If used outside a loop, it behaves like skipStep.
+public function break(string $reason): void;
+
 // Attach any additional debug info to your current step.
 // The infos will be shown in the workflow debug log.
 public function attachStepInfo(string $info): void
@@ -396,6 +405,14 @@ class SongLoop implements \PHPWorkflow\Step\LoopControl {
 
 A loop step may contain a nested workflow if you need more complex steps.
 
+To control the flow of the loop from the steps you can use the `continue` and `break` methods on the `WorkflowControl` object.
+
+By default, a loop is stopped if a step fails.
+You can set the second parameter of the `Loop` class (`$continueOnError`) to true to continue the execution with the next iteration.
+If you enable this option a failed step will not result in a failed workflow.
+Instead, a warning will be added to the process log.
+Calls to `failWorkflow` and `skipWorkflow` will always cancel the loop (and consequently the workflow) independent of the option.
+
 ## Error handling, logging and debugging
 
 The **executeWorkflow** method returns an **WorkflowResult** object which provides the following methods to determine the result of the workflow:
@@ -481,3 +498,11 @@ Summary:
 
 In this example the **AcceptOpenSuggestionForSong** step found a matching open suggestion and successfully accepted the suggestion.
 Consequently, the further workflow execution is skipped.
+
+
+## Tests ##
+
+The library is tested via [PHPUnit](https://phpunit.de/).
+
+After installing the dependencies of the library via `composer update` you can execute the tests with `./vendor/bin/phpunit` (Linux) or `vendor\bin\phpunit.bat` (Windows).
+The test names are optimized for the usage of the `--testdox` output.

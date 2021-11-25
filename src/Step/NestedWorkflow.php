@@ -8,12 +8,14 @@ use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\ExecutableWorkflow;
 use PHPWorkflow\State\NestedContainer;
 use PHPWorkflow\State\WorkflowContainer;
+use PHPWorkflow\State\WorkflowResult;
 use PHPWorkflow\WorkflowControl;
 
 class NestedWorkflow implements WorkflowStep
 {
     private ExecutableWorkflow $nestedWorkflow;
     private ?WorkflowContainer $container;
+    private WorkflowResult $workflowResult;
 
     public function __construct(ExecutableWorkflow $nestedWorkflow, ?WorkflowContainer $container = null)
     {
@@ -29,37 +31,44 @@ class NestedWorkflow implements WorkflowStep
     public function run(WorkflowControl $control, WorkflowContainer $container)
     {
         try {
-            $workflowResult = $this->nestedWorkflow->executeWorkflow(
+            $this->workflowResult = $this->nestedWorkflow->executeWorkflow(
                 new NestedContainer($container, $this->container),
                 // TODO: array unpacking via named arguments when dropping PHP7 support
                 $container->get('__internalExecutionConfiguration')['throwOnFailure'],
             );
         } catch (WorkflowException $exception) {
-            $workflowResult = $exception->getWorkflowResult();
+            $this->workflowResult = $exception->getWorkflowResult();
         }
 
         $control->attachStepInfo(
             str_replace(
                 "\n      \n",
                 "\n\n",
-                str_replace("\n", "\n      ", $workflowResult->debug()),
+                str_replace("\n", "\n      ", $this->workflowResult->debug()),
             ),
         );
 
-        if ($workflowResult->getWarnings()) {
-            $warnings = count($workflowResult->getWarnings(), COUNT_RECURSIVE) - count($workflowResult->getWarnings());
+        if ($this->workflowResult->getWarnings()) {
+            $warnings = count($this->workflowResult->getWarnings(), COUNT_RECURSIVE) -
+                count($this->workflowResult->getWarnings());
+
             $control->warning(
                 sprintf(
                     "Nested workflow '%s' emitted %s warning%s",
-                    $workflowResult->getWorkflowName(),
+                    $this->workflowResult->getWorkflowName(),
                     $warnings,
                     $warnings > 1 ? 's' : '',
                 ),
             );
         }
 
-        if (!$workflowResult->success()) {
-            $control->failStep("Nested workflow '{$workflowResult->getWorkflowName()}' failed");
+        if (!$this->workflowResult->success()) {
+            $control->failStep("Nested workflow '{$this->workflowResult->getWorkflowName()}' failed");
         }
+    }
+
+    public function getNestedWorkflowResult(): WorkflowResult
+    {
+        return $this->workflowResult;
     }
 }

@@ -114,6 +114,13 @@ class NestedWorkflowTest extends TestCase
             DEBUG,
             $result,
         );
+
+        /** @var NestedWorkflow $lastStep */
+        $lastStep = $result->getLastStep();
+        $this->assertInstanceOf(NestedWorkflow::class, $lastStep);
+        $nestedResult = $lastStep->getNestedWorkflowResult();
+
+        $this->assertFalse($nestedResult->success());
     }
 
     public function testNestedWorkflowHasMergedContainer(): void

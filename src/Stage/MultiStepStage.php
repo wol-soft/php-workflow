@@ -25,6 +25,7 @@ abstract class MultiStepStage extends Stage
         $workflowState->setStage(static::STAGE);
 
         foreach ($this->steps as $step) {
+            $workflowState->setStep($step);
             $this->wrapStepExecution($step, $workflowState);
         }
 

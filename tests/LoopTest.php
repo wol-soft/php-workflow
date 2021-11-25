@@ -16,7 +16,7 @@ use PHPWorkflow\WorkflowControl;
 
 class LoopTest extends TestCase
 {
-    use WorkflowTestTrait;
+    use WorkflowTestTrait, WorkflowSetupTrait;
 
     public function testLoop(): void
     {

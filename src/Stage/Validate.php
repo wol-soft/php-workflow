@@ -43,6 +43,8 @@ class Validate extends Stage
 
         $validationErrors = [];
         foreach ($this->validators as $validator) {
+            $workflowState->setStep($validator->getStep());
+
             if ($validator->isHardValidator()) {
                 $this->wrapStepExecution($validator->getStep(), $workflowState);
             } else {

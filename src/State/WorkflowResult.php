@@ -6,26 +6,22 @@ namespace PHPWorkflow\State;
 
 use Exception;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\Step\WorkflowStep;
 
 class WorkflowResult
 {
     private bool $success;
     private ?Exception $exception;
-    private string $workflowName;
-    private ExecutionLog $executionLog;
-    private WorkflowContainer $workflowContainer;
+    private WorkflowState $workflowState;
 
     public function __construct(
         WorkflowState $workflowState,
         bool $success,
         ?Exception $exception = null
     ) {
-        $this->workflowName = $workflowState->getWorkflowName();
-        $this->executionLog = $workflowState->getExecutionLog();
-        $this->workflowContainer = $workflowState->getWorkflowContainer();
-
         $this->success = $success;
         $this->exception = $exception;
+        $this->workflowState = $workflowState;
     }
 
     /**
@@ -33,7 +29,7 @@ class WorkflowResult
      */
     public function getWorkflowName(): string
     {
-        return $this->workflowName;
+        return $this->workflowState->getWorkflowName();
     }
 
     /**
@@ -49,7 +45,7 @@ class WorkflowResult
      */
     public function debug(): string
     {
-        return (string) $this->executionLog;
+        return (string) $this->workflowState->getExecutionLog();
     }
 
     /**
@@ -57,7 +53,7 @@ class WorkflowResult
      */
     public function hasWarnings(): bool
     {
-        return count($this->executionLog->getWarnings()) > 0;
+        return count($this->workflowState->getExecutionLog()->getWarnings()) > 0;
     }
 
     /**
@@ -68,7 +64,7 @@ class WorkflowResult
      */
     public function getWarnings(): array
     {
-        return $this->executionLog->getWarnings();
+        return $this->workflowState->getExecutionLog()->getWarnings();
     }
 
     /**
@@ -85,6 +81,14 @@ class WorkflowResult
      */
     public function getContainer(): WorkflowContainer
     {
-        return $this->workflowContainer;
+        return $this->workflowState->getWorkflowContainer();
+    }
+
+    /**
+     * Get the last executed step of the workflow
+     */
+    public function getLastStep(): WorkflowStep
+    {
+        return $this->workflowState->getCurrentStep();
     }
 }

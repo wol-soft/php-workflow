@@ -16,7 +16,7 @@ use PHPWorkflow\WorkflowControl;
 
 class WorkflowTest extends TestCase
 {
-    use WorkflowTestTrait;
+    use WorkflowTestTrait, WorkflowSetupTrait;
 
     public function testMinimalWorkflow(): void
     {

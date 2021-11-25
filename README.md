@@ -430,6 +430,9 @@ public function getException(): ?Exception;
 public function debug(): string;
 // access the container which was used for the workflow
 public function getContainer(): WorkflowContainer;
+// get the last executed step
+// (e.g. useful to determine which step caused a workflow to fail)
+public function getLastStep(): WorkflowStep;
 ```
 
 As stated above workflows with failing steps before the **Process** stage will be aborted, otherwise the **Process** stage and all downstream stages will be executed.
@@ -506,3 +509,17 @@ The library is tested via [PHPUnit](https://phpunit.de/).
 
 After installing the dependencies of the library via `composer update` you can execute the tests with `./vendor/bin/phpunit` (Linux) or `vendor\bin\phpunit.bat` (Windows).
 The test names are optimized for the usage of the `--testdox` output.
+
+If you want to test workflows you may include the `PHPWorkflow\Tests\WorkflowTestTrait` which adds methods to simplify asserting workflow results.
+The following methods are added to your test classes:
+
+```php
+// assert the debug output of the workflow. See library tests for example usages
+protected function assertDebugLog(string $expected, WorkflowResult $result): void
+// provide a step which you expect to fail the workflow.
+// example: $this->expectFailAtStep(MyFailingStep::class, $workflowResult);
+protected function expectFailAtStep(string $step, WorkflowResult $result): void
+// provide a step which you expect to skip the workflow.
+// example: $this->expectSkipAtStep(MySkippingStep::class, $workflowResult);
+protected function expectSkipAtStep(string $step, WorkflowResult $result): void
+```

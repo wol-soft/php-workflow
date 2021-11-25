@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PHPWorkflow\State\ExecutionLog;
 
 use PHPWorkflow\State\WorkflowState;
+use PHPWorkflow\Step\WorkflowStep;
 
 class ExecutionLog
 {
@@ -113,5 +114,10 @@ class ExecutionLog
     public function getWarnings(): array
     {
         return $this->warnings;
+    }
+
+    public function getLastStep(): WorkflowStep
+    {
+        return $this->workflowState->getCurrentStep();
     }
 }

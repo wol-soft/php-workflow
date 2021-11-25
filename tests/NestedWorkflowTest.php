@@ -13,7 +13,7 @@ use PHPWorkflow\WorkflowControl;
 
 class NestedWorkflowTest extends TestCase
 {
-    use WorkflowTestTrait;
+    use WorkflowTestTrait, WorkflowSetupTrait;
 
     public function testNestedWorkflow(): void
     {

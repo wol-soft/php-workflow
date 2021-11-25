@@ -6,6 +6,7 @@ namespace PHPWorkflow\State;
 
 use Exception;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\Step\WorkflowStep;
 use PHPWorkflow\WorkflowControl;
 
 class WorkflowState
@@ -32,6 +33,7 @@ class WorkflowState
     private array $middlewares = [];
 
     private static array $runningWorkflows = [];
+    private WorkflowStep $currentStep;
 
     public function __construct(WorkflowContainer $workflowContainer)
     {
@@ -125,5 +127,18 @@ class WorkflowState
     public function setInLoop(bool $inLoop): void
     {
         $this->inLoop += $inLoop ? 1 : -1;
+    }
+
+    public function setStep(WorkflowStep $step): void
+    {
+        $this->currentStep = $step;
+    }
+
+    /**
+     * @return WorkflowStep
+     */
+    public function getCurrentStep(): WorkflowStep
+    {
+        return $this->currentStep;
     }
 }

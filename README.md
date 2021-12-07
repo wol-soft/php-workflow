@@ -165,6 +165,24 @@ $workflowContainer = (new \PHPWorkflow\State\WorkflowContainer())
     ->set('playlist', (new PlaylistRepository())->getPlaylistById($request->get('playlistId')));
 ```
 
+Alternatively to set and get the values from the **WorkflowContainer** via string keys you can extend the **WorkflowContainer** and add typed properties/functions to handle values in a type-safe manner:
+
+```php
+class AddSongToPlaylistWorkflowContainer extends \PHPWorkflow\State\WorkflowContainer {
+    public function __construct(
+        public User $user,
+        public Song $song,
+        public Playlist $playlist,
+    ) {}
+}
+
+$workflowContainer = new AddSongToPlaylistWorkflowContainer(
+    Session::getUser(),
+    (new SongRepository())->getSongById($request->get('songId')),
+    (new PlaylistRepository())->getPlaylistById($request->get('playlistId')),
+);
+```
+
 When we execute the workflow via **executeWorkflow** we can inject the **WorkflowContainer**.
 
 ```php
@@ -354,7 +372,7 @@ $workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
             ->addStep(new ClearSongCache())
     )
     ->onSuccess(new NotifySubscribers())
-    ->executeWorkflow($parentWorkflowContainer);
+    ->executeWorkflow($workflowContainer);
 ```
 
 Our process step now implements a loop controlled by the `SongLoop` class.

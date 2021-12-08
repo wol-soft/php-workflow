@@ -402,19 +402,14 @@ class SongLoop implements \PHPWorkflow\Step\LoopControl {
         \PHPWorkflow\WorkflowControl $control,
         \PHPWorkflow\State\WorkflowContainer $container
     ): bool {
-        $songs = $container->get('songs');
-
-        // no songs in container - end the loop
-        if (empty($songs)) {
+        // all songs handled - end the loop
+        if ($iteration === count($container->get('songs'))) {
             return false;
         }
 
         // add the current song to the container so the steps
         // of the loop can access the entry
-        $container->set('currentSong', array_shift($songs));
-
-        // update the songs entry to handle the songs step by step
-        $container->set('songs', $songs);
+        $container->set('currentSong', $container->get('songs')[$iteration]);
 
         return true;
     }

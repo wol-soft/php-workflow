@@ -193,8 +193,6 @@ $workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
 
 Another possibility would be to define a step in the **Prepare** stage (e.g. **PopulateAddSongToPlaylistContainer**) which populates the injected **WorkflowContainer** object.
 
-You can also extend the **WorkflowContainer** object to provide typed access to the data stored in the container.
-
 ## Stages
 
 The following predefined stages are available when defining a workflow:

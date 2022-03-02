@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PHPWorkflow\State;
 
 use Exception;
+use PHPWorkflow\State\ExecutionLog\Describable;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
 use PHPWorkflow\Step\WorkflowStep;
 use PHPWorkflow\WorkflowControl;
@@ -97,7 +98,7 @@ class WorkflowState
     }
 
     public function addExecutionLog(
-        string $step,
+        Describable $step,
         string $state = ExecutionLog::STATE_SUCCESS,
         ?string $reason = null
     ): void {

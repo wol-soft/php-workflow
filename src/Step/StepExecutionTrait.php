@@ -19,7 +19,7 @@ trait StepExecutionTrait
             ($this->resolveMiddleware($step, $workflowState))();
         } catch (SkipStepException | FailStepException $exception) {
             $workflowState->addExecutionLog(
-                $step->getDescription(),
+                $step,
                 $exception instanceof FailStepException ? ExecutionLog::STATE_FAILED : ExecutionLog::STATE_SKIPPED,
                 $exception->getMessage(),
             );
@@ -41,7 +41,7 @@ trait StepExecutionTrait
             return;
         } catch (Exception $exception) {
             $workflowState->addExecutionLog(
-                $step->getDescription(),
+                $step,
                 $exception instanceof SkipWorkflowException ? ExecutionLog::STATE_SKIPPED : ExecutionLog::STATE_FAILED,
                 $exception->getMessage(),
             );
@@ -58,7 +58,7 @@ trait StepExecutionTrait
             return;
         }
 
-        $workflowState->addExecutionLog($step->getDescription());
+        $workflowState->addExecutionLog($step);
     }
 
     private function resolveMiddleware(WorkflowStep $step, WorkflowState $workflowState): callable

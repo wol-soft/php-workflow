@@ -56,7 +56,7 @@ class NestedWorkflowTest extends TestCase
                   Process:
                     - nested-process-test: ok (1 warning)
                       - Hello World
-
+            
                   Summary:
                     - Workflow execution: ok
                       - Execution time: *
@@ -65,7 +65,7 @@ class NestedWorkflowTest extends TestCase
             Process:
               - process-test: ok (1 warning)
                 - from-nested
-
+            
             Summary:
               - Workflow execution: ok
                 - Execution time: *
@@ -107,7 +107,7 @@ class NestedWorkflowTest extends TestCase
                   Summary:
                     - Workflow execution: failed (exception-message)
                       - Execution time: *
-
+            
             Summary:
               - Workflow execution: failed (Nested workflow 'nested-test' failed)
                 - Execution time: *
@@ -190,7 +190,7 @@ class NestedWorkflowTest extends TestCase
                   Process:
                     - nested-process-test: ok
                       - from-nested
-
+            
                   Summary:
                     - Workflow execution: ok
                       - Execution time: *
@@ -199,7 +199,7 @@ class NestedWorkflowTest extends TestCase
                 - from-nested
                 - set-parent-data
                 - NULL
-
+            
             Summary:
               - Workflow execution: ok
                 - Execution time: *

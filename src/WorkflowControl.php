@@ -102,10 +102,11 @@ class WorkflowControl
      * Info will be shown in the workflow debug log.
      *
      * @param string $info
+     * @param array  $context May contain additional information which is evaluated in a custom output formatter
      */
-    public function attachStepInfo(string $info): void
+    public function attachStepInfo(string $info, array $context = []): void
     {
-        $this->workflowState->getExecutionLog()->attachStepInfo($info);
+        $this->workflowState->getExecutionLog()->attachStepInfo($info, $context);
     }
 
     /**

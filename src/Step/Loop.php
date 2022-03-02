@@ -10,6 +10,7 @@ use PHPWorkflow\Exception\WorkflowControl\ContinueException;
 use PHPWorkflow\Exception\WorkflowControl\FailWorkflowException;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\State\ExecutionLog\Summary;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\WorkflowControl;
@@ -68,7 +69,7 @@ class Loop implements WorkflowStep
                 } else {
                     if ($exception instanceof BreakException) {
                         WorkflowState::getRunningWorkflow()->addExecutionLog(
-                            "Loop iteration #$iteration",
+                            new Summary("Loop iteration #$iteration"),
                             ExecutionLog::STATE_SKIPPED,
                             $reason,
                         );
@@ -90,7 +91,8 @@ class Loop implements WorkflowStep
                 }
             }
 
-            WorkflowState::getRunningWorkflow()->addExecutionLog("Loop iteration #$iteration", $loopState, $reason);
+            WorkflowState::getRunningWorkflow()
+                ->addExecutionLog(new Summary("Loop iteration #$iteration"), $loopState, $reason);
         }
         WorkflowState::getRunningWorkflow()->setInLoop(false);
 

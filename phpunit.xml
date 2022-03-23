@@ -15,6 +15,9 @@
     <include>
       <directory>src</directory>
     </include>
+    <exclude>
+      <directory>src/State/ExecutionLog/OutputFormat</directory>
+    </exclude>
   </coverage>
   <testsuite name="PHPWorkflow">
     <directory>tests</directory>

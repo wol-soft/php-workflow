@@ -6,7 +6,12 @@ namespace PHPWorkflow\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PHPWorkflow\State\ExecutionLog\OutputFormat\GraphViz;
+use PHPWorkflow\State\ExecutionLog\OutputFormat\WorkflowGraph;
+use PHPWorkflow\State\WorkflowContainer;
+use PHPWorkflow\Step\Loop;
+use PHPWorkflow\Step\NestedWorkflow;
 use PHPWorkflow\Workflow;
+use PHPWorkflow\WorkflowControl;
 
 /**
  * Class OutputFormatterTest
@@ -17,7 +22,7 @@ class OutputFormatterTest extends TestCase
 {
     use WorkflowTestTrait, WorkflowSetupTrait;
 
-    public function testCustomOutputFormatter(): void
+    public function testGraphVizOutputFormatter(): void
     {
         $result = (new Workflow('test'))
             ->process($this->setupEmptyStep('process-test'))

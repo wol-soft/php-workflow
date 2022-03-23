@@ -67,6 +67,35 @@ trait WorkflowSetupTrait
         };
     }
 
+    private function entryLoopControl(): LoopControl
+    {
+        return $this->setupLoop(
+            'process-loop',
+            function (WorkflowControl $control, WorkflowContainer $container): bool {
+                $entries = $container->get('entries');
+
+                if (empty($entries)) {
+                    return false;
+                }
+
+                $container->set('entry', array_shift($entries));
+                $container->set('entries', $entries);
+
+                return true;
+            },
+        );
+    }
+
+    private function processEntry(): WorkflowStep
+    {
+        return $this->setupStep(
+            'process-test',
+            function (WorkflowControl $control, WorkflowContainer $container) {
+                $control->attachStepInfo("Process entry " . $container->get('entry'));
+            },
+        );
+    }
+
     public function failDataProvider(): array
     {
         return [

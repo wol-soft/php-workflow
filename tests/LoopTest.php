@@ -8,9 +8,7 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\Step\Loop;
-use PHPWorkflow\Step\LoopControl;
 use PHPWorkflow\Step\NestedWorkflow;
-use PHPWorkflow\Step\WorkflowStep;
 use PHPWorkflow\Workflow;
 use PHPWorkflow\WorkflowControl;
 
@@ -796,34 +794,5 @@ class LoopTest extends TestCase
             }],
             'By failing step' => [fn (WorkflowControl $control) => $control->failStep('Fail Message')],
         ];
-    }
-
-    private function entryLoopControl(): LoopControl
-    {
-        return $this->setupLoop(
-            'process-loop',
-            function (WorkflowControl $control, WorkflowContainer $container): bool {
-                $entries = $container->get('entries');
-
-                if (empty($entries)) {
-                    return false;
-                }
-
-                $container->set('entry', array_shift($entries));
-                $container->set('entries', $entries);
-
-                return true;
-            },
-        );
-    }
-
-    private function processEntry(): WorkflowStep
-    {
-        return $this->setupStep(
-            'process-test',
-            function (WorkflowControl $control, WorkflowContainer $container) {
-                $control->attachStepInfo("Process entry " . $container->get('entry'));
-            },
-        );
     }
 }

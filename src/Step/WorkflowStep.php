@@ -13,5 +13,5 @@ interface WorkflowStep extends Describable
     /**
      * Implement the logic for your step
      */
-    public function run(WorkflowControl $control, WorkflowContainer $container);
+    public function run(WorkflowControl $control, WorkflowContainer $container): void;
 }

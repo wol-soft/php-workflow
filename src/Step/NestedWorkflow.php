@@ -29,7 +29,7 @@ class NestedWorkflow implements WorkflowStep
         return "Execute nested workflow";
     }
 
-    public function run(WorkflowControl $control, WorkflowContainer $container)
+    public function run(WorkflowControl $control, WorkflowContainer $container): void
     {
         try {
             $this->workflowResult = $this->nestedWorkflow->executeWorkflow(

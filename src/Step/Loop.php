@@ -42,7 +42,7 @@ class Loop implements WorkflowStep
         return $this->loopControl->getDescription();
     }
 
-    public function run(WorkflowControl $control, WorkflowContainer $container)
+    public function run(WorkflowControl $control, WorkflowContainer $container): void
     {
         $iteration = 0;
 

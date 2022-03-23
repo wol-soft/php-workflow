@@ -34,7 +34,7 @@ trait WorkflowSetupTrait
                 return $this->description;
             }
 
-            public function run(WorkflowControl $control, WorkflowContainer $container)
+            public function run(WorkflowControl $control, WorkflowContainer $container): void
             {
                 ($this->callable)($control, $container);
             }

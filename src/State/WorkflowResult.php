@@ -59,7 +59,7 @@ class WorkflowResult
 
     /**
      * Get all warnings of the workflow execution.
-     * Returns a nested array with all warnings grouped by stage.
+     * Returns a nested array with all warnings grouped by stage (WorkflowState::STAGE_* constants).
      *
      * @return string[][]
      */

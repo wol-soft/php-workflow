@@ -32,8 +32,6 @@ class ExecutionLog
     }
 
     public function addStep(int $stage, Describable $step, string $state, ?string $reason): void {
-        $stage = $this->mapStage($stage);
-
         $this->stages[$stage][] = new Step($step, $state, $reason, $this->stepInfo, $this->warningsDuringStep);
         $this->stepInfo = [];
         $this->warningsDuringStep = 0;
@@ -51,7 +49,7 @@ class ExecutionLog
 
     public function addWarning(string $message, bool $workflowReportWarning = false): void
     {
-        $this->warnings[$this->mapStage($this->workflowState->getStage())][] = $message;
+        $this->warnings[$this->workflowState->getStage()][] = $message;
 
         if (!$workflowReportWarning) {
             $this->warningsDuringStep++;
@@ -78,7 +76,8 @@ class ExecutionLog
                 $warnings .= implode(
                     '',
                     array_map(
-                        fn (string $warning): string => sprintf(PHP_EOL . '        %s: %s', $stage, $warning),
+                        fn (string $warning): string =>
+                            sprintf(PHP_EOL . '        %s: %s', self::mapStage($stage), $warning),
                         $stageWarnings,
                     ),
                 );
@@ -88,7 +87,7 @@ class ExecutionLog
         }
     }
 
-    private function mapStage(int $stage): string
+    public static function mapStage(int $stage): string
     {
         switch ($stage) {
             case WorkflowState::STAGE_PREPARE: return 'Prepare';
@@ -98,7 +97,7 @@ class ExecutionLog
             case WorkflowState::STAGE_ON_ERROR: return 'On Error';
             case WorkflowState::STAGE_ON_SUCCESS: return 'On Success';
             case WorkflowState::STAGE_AFTER: return 'After';
-            case WorkflowState::STAGE_SUMMARY: return PHP_EOL . 'Summary';
+            case WorkflowState::STAGE_SUMMARY: return 'Summary';
         }
     }
 

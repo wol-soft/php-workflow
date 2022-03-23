@@ -10,6 +10,7 @@ use PHPWorkflow\Exception\WorkflowControl\ContinueException;
 use PHPWorkflow\Exception\WorkflowControl\FailWorkflowException;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\State\ExecutionLog\StepInfo;
 use PHPWorkflow\State\ExecutionLog\Summary;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\State\WorkflowState;
@@ -46,6 +47,9 @@ class Loop implements WorkflowStep
         $iteration = 0;
 
         WorkflowState::getRunningWorkflow()->setInLoop(true);
+        $control->attachStepInfo(StepInfo::LOOP_START, ['description' => $this->loopControl->getDescription()]);
+        WorkflowState::getRunningWorkflow()->addExecutionLog(new Summary('Start Loop'));
+
         while (true) {
             $loopState = ExecutionLog::STATE_SUCCESS;
             $reason = null;
@@ -83,6 +87,9 @@ class Loop implements WorkflowStep
                         $exception instanceof SkipWorkflowException ||
                         $exception instanceof FailWorkflowException
                     ) {
+                        $control->attachStepInfo(StepInfo::LOOP_ITERATION, ['iteration' => $iteration]);
+                        $control->attachStepInfo(StepInfo::LOOP_END, ['iterations' => $iteration]);
+
                         throw $exception;
                     }
 
@@ -91,11 +98,13 @@ class Loop implements WorkflowStep
                 }
             }
 
+            $control->attachStepInfo(StepInfo::LOOP_ITERATION, ['iteration' => $iteration]);
+
             WorkflowState::getRunningWorkflow()
                 ->addExecutionLog(new Summary("Loop iteration #$iteration"), $loopState, $reason);
         }
         WorkflowState::getRunningWorkflow()->setInLoop(false);
 
-        $control->attachStepInfo("Loop finished after $iteration iteration" . ($iteration === 1 ? '' : 's'));
+        $control->attachStepInfo(StepInfo::LOOP_END, ['iterations' => $iteration]);
     }
 }

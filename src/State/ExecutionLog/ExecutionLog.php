@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\State\ExecutionLog;
 
+use PHPWorkflow\State\ExecutionLog\OutputFormat\OutputFormat;
 use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Step\WorkflowStep;
 
@@ -15,7 +16,7 @@ class ExecutionLog
 
     /** @var Step[][] */
     private array $stages = [];
-    /** @var string[] Collect additional debug info concerning the current step */
+    /** @var StepInfo[] Collect additional debug info concerning the current step */
     private array $stepInfo = [];
     /** @var string[][] Collect all warnings which occurred during the workflow execution */
     private array $warnings = [];
@@ -30,37 +31,25 @@ class ExecutionLog
         $this->workflowState = $workflowState;
     }
 
-    public function addStep(int $stage, string $step, string $state, ?string $reason): void {
-        $stage = $this->mapStage($stage);
-
+    public function addStep(int $stage, Describable $step, string $state, ?string $reason): void {
         $this->stages[$stage][] = new Step($step, $state, $reason, $this->stepInfo, $this->warningsDuringStep);
         $this->stepInfo = [];
         $this->warningsDuringStep = 0;
     }
 
-    public function __toString(): string
+    public function debug(OutputFormat $formatter)
     {
-        $debug = "Process log for workflow '{$this->workflowState->getWorkflowName()}':\n";
-
-        foreach ($this->stages as $stage => $steps) {
-            $debug .= "$stage:\n";
-
-            foreach ($steps as $step) {
-                $debug .= '  - ' . $step . "\n";
-            }
-        }
-
-        return trim($debug);
+        return $formatter->format($this->workflowState->getWorkflowName(), $this->stages);
     }
 
-    public function attachStepInfo(string $info): void
+    public function attachStepInfo(string $info, array $context = []): void
     {
-        $this->stepInfo[] = $info;
+        $this->stepInfo[] = new StepInfo($info, $context);
     }
 
     public function addWarning(string $message, bool $workflowReportWarning = false): void
     {
-        $this->warnings[$this->mapStage($this->workflowState->getStage())][] = $message;
+        $this->warnings[$this->workflowState->getStage()][] = $message;
 
         if (!$workflowReportWarning) {
             $this->warningsDuringStep++;
@@ -74,11 +63,11 @@ class ExecutionLog
 
     public function stopExecution(): void
     {
-        $this->attachStepInfo("Execution time: " . number_format(1000 * (microtime(true) - $this->startAt), 5) . 'ms');
+        $this->attachStepInfo('Execution time: ' . number_format(1000 * (microtime(true) - $this->startAt), 5) . 'ms');
 
         if ($this->warnings) {
             $warnings = sprintf(
-                "Got %s warning%s during the execution:",
+                'Got %s warning%s during the execution:',
                 $amount = count($this->warnings, COUNT_RECURSIVE) - count($this->warnings),
                 $amount > 1 ? 's' : '',
             );
@@ -87,7 +76,8 @@ class ExecutionLog
                 $warnings .= implode(
                     '',
                     array_map(
-                        fn (string $warning): string => sprintf("\n        %s: %s", $stage, $warning),
+                        fn (string $warning): string =>
+                            sprintf(PHP_EOL . '        %s: %s', self::mapStage($stage), $warning),
                         $stageWarnings,
                     ),
                 );
@@ -97,7 +87,7 @@ class ExecutionLog
         }
     }
 
-    private function mapStage(int $stage): string
+    public static function mapStage(int $stage): string
     {
         switch ($stage) {
             case WorkflowState::STAGE_PREPARE: return 'Prepare';
@@ -107,7 +97,7 @@ class ExecutionLog
             case WorkflowState::STAGE_ON_ERROR: return 'On Error';
             case WorkflowState::STAGE_ON_SUCCESS: return 'On Success';
             case WorkflowState::STAGE_AFTER: return 'After';
-            case WorkflowState::STAGE_SUMMARY: return "\nSummary";
+            case WorkflowState::STAGE_SUMMARY: return 'Summary';
         }
     }
 

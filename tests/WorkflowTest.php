@@ -11,6 +11,7 @@ use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\Exception\WorkflowValidationException;
 use PHPWorkflow\Middleware\ProfileStep;
 use PHPWorkflow\State\WorkflowContainer;
+use PHPWorkflow\State\WorkflowState;
 use PHPWorkflow\Workflow;
 use PHPWorkflow\WorkflowControl;
 
@@ -95,10 +96,10 @@ class WorkflowTest extends TestCase
         $this->assertTrue($result->success());
         $this->assertTrue($result->hasWarnings());
         $this->assertSame($result->getWarnings(), [
-            'Before' => [
+            WorkflowState::STAGE_BEFORE => [
                 "before-warning (FailWorkflowException: Fail-Message in $file::$exceptionLineNamespacedException)",
             ],
-            'Process' => [
+            WorkflowState::STAGE_PROCESS => [
                 'process-warning',
                 "process-warning2 (InvalidArgumentException: Global-Exception-Message in $file::$exceptionLineGlobalException)",
             ],

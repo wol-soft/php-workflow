@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\Tests;
 
+use PHPWorkflow\State\ExecutionLog\OutputFormat\OutputFormat;
 use PHPWorkflow\State\WorkflowResult;
 
 trait WorkflowTestTrait
 {
-    protected function assertDebugLog(string $expected, WorkflowResult $result): void
+    protected function assertDebugLog(string $expected, WorkflowResult $result, ?OutputFormat $formatter = null): void
     {
         $this->assertSame(
             $expected,
@@ -21,7 +22,7 @@ trait WorkflowTestTrait
                     'anonClass',
                     '*',
                 ],
-                $result->debug(),
+                $result->debug($formatter),
             ),
         );
     }

@@ -6,13 +6,13 @@ namespace PHPWorkflow\State\ExecutionLog;
 
 class Step
 {
-    private string $step;
+    private Describable $step;
     private string $state;
     private ?string $reason;
     private array $stepInfo;
     private int $warnings;
 
-    public function __construct(string $step, string $state, ?string $reason, array $stepInfo, int $warnings)
+    public function __construct(Describable $step, string $state, ?string $reason, array $stepInfo, int $warnings)
     {
         $this->step = $step;
         $this->state = $state;
@@ -21,16 +21,31 @@ class Step
         $this->warnings = $warnings;
     }
 
-    public function __toString(): string
+    public function getDescription(): string
     {
-        $stepLog = "{$this->step}: {$this->state}" .
-            ($this->reason ? " ({$this->reason})" : '') .
-            ($this->warnings ? " ({$this->warnings} warning" . ($this->warnings > 1 ? 's' : '') . ")" : '');
+        return $this->step->getDescription();
+    }
 
-        foreach ($this->stepInfo as $info) {
-            $stepLog .= "\n    - $info";
-        }
+    public function getState(): string
+    {
+        return $this->state;
+    }
 
-        return $stepLog;
+    public function getReason(): ?string
+    {
+        return $this->reason;
+    }
+
+    /**
+     * @return StepInfo[]
+     */
+    public function getStepInfo(): array
+    {
+        return $this->stepInfo;
+    }
+
+    public function getWarnings(): int
+    {
+        return $this->warnings;
     }
 }

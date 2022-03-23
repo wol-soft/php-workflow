@@ -23,6 +23,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 * [Nested workflows](#Nested-workflows)
 * [Loops](#Loops)
 * [Error handling, logging and debugging](#Error-handling-logging-and-debugging)
+  * [Custom output formatter](#Custom-output-formatter)
 * [Tests](#Tests)
 
 ## Installation
@@ -438,7 +439,7 @@ public function getWarnings(): array;
 // get the exception which caused the workflow to fail
 public function getException(): ?Exception;
 // get the debug execution log of the workflow
-public function debug(): string;
+public function debug(?OutputFormat $formatter = null);
 // access the container which was used for the workflow
 public function getContainer(): WorkflowContainer;
 // get the last executed step
@@ -455,7 +456,7 @@ The **debug** method provides an execution log including all processed steps wit
 
 Some example outputs for our example workflow may look like the following.
 
-### Successful execution
+#### Successful execution
 
 ```
 Process log for workflow 'AddSongToPlaylist':
@@ -481,7 +482,7 @@ Summary:
 
 Note the additional data added to the debug log for the **Process** stage and the **NotifySubscribers** step via the **attachStepInfo** method of the **WorkflowControl**.
 
-### Failed workflow
+#### Failed workflow
 
 ```
 Process log for workflow 'AddSongToPlaylist':
@@ -495,7 +496,7 @@ Summary:
 
 In this example the **CurrentUserIsAllowedToEditPlaylistValidator** step threw an exception with the message `playlist locked`.
 
-### Workflow skipped
+#### Workflow skipped
 
 ```
 Process log for workflow 'AddSongToPlaylist':
@@ -513,6 +514,18 @@ Summary:
 In this example the **AcceptOpenSuggestionForSong** step found a matching open suggestion and successfully accepted the suggestion.
 Consequently, the further workflow execution is skipped.
 
+### Custom-output-formatter
+
+The output of the `debug` method can be controlled via an implementation of the `OutputFormat` interface.
+By default a string representation of the execution will be returned (just like the example outputs).
+
+Currently the following additional formatters are implemented:
+
+| Formatter       | Description   |
+| --------------- | ------------- |
+| `StringLog`     | The default formatter. Creates a string representation. <br />Example:<br />`$result->debug();` |
+| `WorkflowGraph` | Creates a SVG file containing a graph which represents the workflow execution. The generated image will be stored in the provided target directory. Requires `dot` executable.<br />Example:<br />`$result->debug(new WorkflowGraph('/var/log/workflow/graph'));` |
+| `GraphViz`      | Returns a string containing [GraphViz](https://graphviz.org/) code for a graph representing the workflow execution.  <br />Example:<br />`$result->debug(new GraphViz());`|
 
 ## Tests ##
 

@@ -6,6 +6,7 @@ namespace PHPWorkflow\Step;
 
 use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\ExecutableWorkflow;
+use PHPWorkflow\State\ExecutionLog\StepInfo;
 use PHPWorkflow\State\NestedContainer;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\State\WorkflowResult;
@@ -28,7 +29,7 @@ class NestedWorkflow implements WorkflowStep
         return "Execute nested workflow";
     }
 
-    public function run(WorkflowControl $control, WorkflowContainer $container)
+    public function run(WorkflowControl $control, WorkflowContainer $container): void
     {
         try {
             $this->workflowResult = $this->nestedWorkflow->executeWorkflow(
@@ -40,13 +41,7 @@ class NestedWorkflow implements WorkflowStep
             $this->workflowResult = $exception->getWorkflowResult();
         }
 
-        $control->attachStepInfo(
-            str_replace(
-                "\n      \n",
-                "\n\n",
-                str_replace("\n", "\n      ", $this->workflowResult->debug()),
-            ),
-        );
+        $control->attachStepInfo(StepInfo::NESTED_WORKFLOW, ['result' => $this->workflowResult]);
 
         if ($this->workflowResult->getWarnings()) {
             $warnings = count($this->workflowResult->getWarnings(), COUNT_RECURSIVE) -

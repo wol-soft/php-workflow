@@ -8,6 +8,7 @@ use Exception;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
 use PHPWorkflow\Exception\WorkflowException;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\State\ExecutionLog\Summary;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\State\WorkflowResult;
 use PHPWorkflow\State\WorkflowState;
@@ -38,12 +39,12 @@ trait AllowNextExecuteWorkflow
 
             $workflowState->getExecutionLog()->stopExecution();
             $workflowState->setStage(WorkflowState::STAGE_SUMMARY);
-            $workflowState->addExecutionLog('Workflow execution');
+            $workflowState->addExecutionLog(new Summary('Workflow execution'));
         } catch (Exception $exception) {
             $workflowState->getExecutionLog()->stopExecution();
             $workflowState->setStage(WorkflowState::STAGE_SUMMARY);
             $workflowState->addExecutionLog(
-                'Workflow execution',
+                new Summary('Workflow execution'),
                 $exception instanceof SkipWorkflowException ? ExecutionLog::STATE_SKIPPED : ExecutionLog::STATE_FAILED,
                 $exception->getMessage(),
             );

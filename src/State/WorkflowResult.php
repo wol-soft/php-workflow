@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace PHPWorkflow\State;
 
 use Exception;
-use PHPWorkflow\State\ExecutionLog\ExecutionLog;
+use PHPWorkflow\State\ExecutionLog\OutputFormat\OutputFormat;
+use PHPWorkflow\State\ExecutionLog\OutputFormat\StringLog;
 use PHPWorkflow\Step\WorkflowStep;
 
 class WorkflowResult
@@ -43,9 +44,9 @@ class WorkflowResult
     /**
      * Get the full debug log for the workflow execution
      */
-    public function debug(): string
+    public function debug(?OutputFormat $formatter = null)
     {
-        return (string) $this->workflowState->getExecutionLog();
+        return $this->workflowState->getExecutionLog()->debug($formatter ?? new StringLog());
     }
 
     /**
@@ -58,7 +59,7 @@ class WorkflowResult
 
     /**
      * Get all warnings of the workflow execution.
-     * Returns a nested array with all warnings grouped by stage.
+     * Returns a nested array with all warnings grouped by stage (WorkflowState::STAGE_* constants).
      *
      * @return string[][]
      */

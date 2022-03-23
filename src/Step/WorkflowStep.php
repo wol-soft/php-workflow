@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace PHPWorkflow\Step;
 
+use PHPWorkflow\State\ExecutionLog\Describable;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\WorkflowControl;
 
-interface WorkflowStep
+interface WorkflowStep extends Describable
 {
-    /**
-     * Describe in a few words what this step does
-     */
-    public function getDescription(): string;
-
     /**
      * Implement the logic for your step
      */
-    public function run(WorkflowControl $control, WorkflowContainer $container);
+    public function run(WorkflowControl $control, WorkflowContainer $container): void;
 }

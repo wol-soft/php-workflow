@@ -34,7 +34,7 @@ trait WorkflowSetupTrait
                 return $this->description;
             }
 
-            public function run(WorkflowControl $control, WorkflowContainer $container)
+            public function run(WorkflowControl $control, WorkflowContainer $container): void
             {
                 ($this->callable)($control, $container);
             }
@@ -65,6 +65,35 @@ trait WorkflowSetupTrait
                 return ($this->callable)($control, $container);
             }
         };
+    }
+
+    private function entryLoopControl(): LoopControl
+    {
+        return $this->setupLoop(
+            'process-loop',
+            function (WorkflowControl $control, WorkflowContainer $container): bool {
+                $entries = $container->get('entries');
+
+                if (empty($entries)) {
+                    return false;
+                }
+
+                $container->set('entry', array_shift($entries));
+                $container->set('entries', $entries);
+
+                return true;
+            },
+        );
+    }
+
+    private function processEntry(): WorkflowStep
+    {
+        return $this->setupStep(
+            'process-test',
+            function (WorkflowControl $control, WorkflowContainer $container) {
+                $control->attachStepInfo("Process entry " . $container->get('entry'));
+            },
+        );
     }
 
     public function failDataProvider(): array

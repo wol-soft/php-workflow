@@ -8,9 +8,7 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use PHPWorkflow\State\WorkflowContainer;
 use PHPWorkflow\Step\Loop;
-use PHPWorkflow\Step\LoopControl;
 use PHPWorkflow\Step\NestedWorkflow;
-use PHPWorkflow\Step\WorkflowStep;
 use PHPWorkflow\Workflow;
 use PHPWorkflow\WorkflowControl;
 
@@ -50,17 +48,18 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-                - Process entry a
-              - Loop iteration #1: ok
-              - process-test: ok
-                - Process entry b
-              - Loop iteration #2: ok
-              - process-test: ok
-                - Process entry c
-              - Loop iteration #3: ok
-              - process-loop: ok
-                - Loop finished after 3 iterations
+              - Start Loop: ok
+                - process-test: ok
+                  - Process entry a
+                - Loop iteration #1: ok
+                - process-test: ok
+                  - Process entry b
+                - Loop iteration #2: ok
+                - process-test: ok
+                  - Process entry c
+                - Loop iteration #3: ok
+                - process-loop: ok
+                  - Loop finished after 3 iterations
             
             Summary:
               - Workflow execution: ok
@@ -84,8 +83,9 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-loop: ok
-                - Loop finished after 0 iterations
+              - Start Loop: ok
+                - process-loop: ok
+                  - Loop finished after 0 iterations
             
             Summary:
               - Workflow execution: ok
@@ -112,16 +112,17 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-                - Process entry a
-              - process-test-2: ok
-              - Loop iteration #1: ok
-              - process-test: ok
-                - Process entry b
-              - process-test-2: ok
-              - Loop iteration #2: ok
-              - process-loop: ok
-                - Loop finished after 2 iterations
+              - Start Loop: ok
+                - process-test: ok
+                  - Process entry a
+                - process-test-2: ok
+                - Loop iteration #1: ok
+                - process-test: ok
+                  - Process entry b
+                - process-test-2: ok
+                - Loop iteration #2: ok
+                - process-loop: ok
+                  - Loop finished after 2 iterations
             
             Summary:
               - Workflow execution: ok
@@ -151,28 +152,29 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - Execute nested workflow: ok
-                - Process log for workflow 'nested-workflow':
-                  Process:
-                    - process-test: ok
-                      - Process entry a
+              - Start Loop: ok
+                - Execute nested workflow: ok
+                  - Process log for workflow 'nested-workflow':
+                    Process:
+                      - process-test: ok
+                        - Process entry a
             
-                  Summary:
-                    - Workflow execution: ok
-                      - Execution time: *
-              - Loop iteration #1: ok
-              - Execute nested workflow: ok
-                - Process log for workflow 'nested-workflow':
-                  Process:
-                    - process-test: ok
-                      - Process entry b
+                    Summary:
+                      - Workflow execution: ok
+                        - Execution time: *
+                - Loop iteration #1: ok
+                - Execute nested workflow: ok
+                  - Process log for workflow 'nested-workflow':
+                    Process:
+                      - process-test: ok
+                        - Process entry b
             
-                  Summary:
-                    - Workflow execution: ok
-                      - Execution time: *
-              - Loop iteration #2: ok
-              - process-loop: ok
-                - Loop finished after 2 iterations
+                    Summary:
+                      - Workflow execution: ok
+                        - Execution time: *
+                - Loop iteration #2: ok
+                - process-loop: ok
+                  - Loop finished after 2 iterations
             
             Summary:
               - Workflow execution: ok
@@ -210,18 +212,19 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-                - Process entry
-              - Post-Process entry: ok
-              - Loop iteration #1: ok
-              - process-test: skipped (Skip reason)
-              - Loop iteration #2: skipped (Skip reason)
-              - process-test: ok
-                - Process entry
-              - Post-Process entry: ok
-              - Loop iteration #3: ok
-              - process-loop: ok
-                - Loop finished after 3 iterations
+              - Start Loop: ok
+                - process-test: ok
+                  - Process entry
+                - Post-Process entry: ok
+                - Loop iteration #1: ok
+                - process-test: skipped (Skip reason)
+                - Loop iteration #2: skipped (Skip reason)
+                - process-test: ok
+                  - Process entry
+                - Post-Process entry: ok
+                - Loop iteration #3: ok
+                - process-loop: ok
+                  - Loop finished after 3 iterations
             
             Summary:
               - Workflow execution: ok
@@ -268,15 +271,16 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process 1: ok
-              - process 2: ok
-              - Loop iteration #1: ok
-              - Loop iteration #2: skipped (Skip reason)
-              - process 1: ok
-              - process 2: ok
-              - Loop iteration #3: ok
-              - process-loop: ok
-                - Loop finished after 3 iterations
+              - Start Loop: ok
+                - process 1: ok
+                - process 2: ok
+                - Loop iteration #1: ok
+                - Loop iteration #2: skipped (Skip reason)
+                - process 1: ok
+                - process 2: ok
+                - Loop iteration #3: ok
+                - process-loop: ok
+                  - Loop finished after 3 iterations
             
             Summary:
               - Workflow execution: ok
@@ -314,15 +318,16 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-                - Process entry
-              - Post-Process entry: ok
-              - Loop iteration #1: ok
-              - process-test: skipped (break reason)
-              - Loop iteration #2: skipped (break reason)
-              - process-loop: ok
-                - Loop break in iteration #2
-                - Loop finished after 2 iterations
+              - Start Loop: ok
+                - process-test: ok
+                  - Process entry
+                - Post-Process entry: ok
+                - Loop iteration #1: ok
+                - process-test: skipped (break reason)
+                - Loop iteration #2: skipped (break reason)
+                - process-loop: ok
+                  - Loop break in iteration #2
+                  - Loop finished after 2 iterations
             
             Summary:
               - Workflow execution: ok
@@ -369,13 +374,14 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process 1: ok
-              - process 2: ok
-              - Loop iteration #1: ok
-              - Loop iteration #2: skipped (Break reason)
-              - process-loop: ok
-                - Loop break in iteration #2
-                - Loop finished after 2 iterations
+              - Start Loop: ok
+                - process 1: ok
+                - process 2: ok
+                - Loop iteration #1: ok
+                - Loop iteration #2: skipped (Break reason)
+                - process-loop: ok
+                  - Loop break in iteration #2
+                  - Loop finished after 2 iterations
             
             Summary:
               - Workflow execution: ok
@@ -410,14 +416,15 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-              - Loop iteration #1: ok
-              - process-test: skipped (no entry)
-              - Loop iteration #2: ok
-              - process-test: ok
-              - Loop iteration #3: ok
-              - process-loop: ok
-                - Loop finished after 3 iterations
+              - Start Loop: ok
+                - process-test: ok
+                - Loop iteration #1: ok
+                - process-test: skipped (no entry)
+                - Loop iteration #2: ok
+                - process-test: ok
+                - Loop iteration #3: ok
+                - process-loop: ok
+                  - Loop finished after 3 iterations
             
             Summary:
               - Workflow execution: ok
@@ -446,7 +453,9 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-loop: skipped (skip reason)
+              - Start Loop: ok
+                - process-loop: skipped (skip reason)
+                  - Loop finished after 1 iteration
             
             Summary:
               - Workflow execution: ok
@@ -485,10 +494,12 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-              - Loop iteration #1: ok
-              - process-test: skipped (no entry)
-              - process-loop: skipped (no entry)
+              - Start Loop: ok
+                - process-test: ok
+                - Loop iteration #1: ok
+                - process-test: skipped (no entry)
+                - process-loop: skipped (no entry)
+                  - Loop finished after 2 iterations
             
             Summary:
               - Workflow execution: skipped (no entry)
@@ -522,7 +533,9 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-loop: skipped (skip reason)
+              - Start Loop: ok
+                - process-loop: skipped (skip reason)
+                  - Loop finished after 1 iteration
             
             Summary:
               - Workflow execution: skipped (skip reason)
@@ -565,11 +578,13 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-              - Loop iteration #1: ok
-              - process-test: failed (Fail Message)
-                - got value NULL
-              - process-loop: failed (Fail Message)
+              - Start Loop: ok
+                - process-test: ok
+                - Loop iteration #1: ok
+                - process-test: failed (Fail Message)
+                  - got value NULL
+                - process-loop: failed (Fail Message)
+                  - Loop finished after 2 iterations
             
             Summary:
               - Workflow execution: failed (Fail Message)
@@ -607,14 +622,15 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-              - Loop iteration #1: ok
-              - process-test: failed (Fail Message)
-              - Loop iteration #2: failed (Fail Message) (1 warning)
-              - process-test: ok
-              - Loop iteration #3: ok
-              - process-loop: ok
-                - Loop finished after 3 iterations
+              - Start Loop: ok
+                - process-test: ok
+                - Loop iteration #1: ok
+                - process-test: failed (Fail Message)
+                - Loop iteration #2: failed (Fail Message) (1 warning)
+                - process-test: ok
+                - Loop iteration #3: ok
+                - process-loop: ok
+                  - Loop finished after 3 iterations
             
             Summary:
               - Workflow execution: ok
@@ -652,10 +668,12 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-              - Loop iteration #1: ok
-              - process-test: failed (Fail Message)
-              - process-loop: failed (Fail Message)
+              - Start Loop: ok
+                - process-test: ok
+                - Loop iteration #1: ok
+                - process-test: failed (Fail Message)
+                - process-loop: failed (Fail Message)
+                  - Loop finished after 2 iterations
             
             Summary:
               - Workflow execution: failed (Fail Message)
@@ -685,7 +703,9 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-loop: failed (Fail Message)
+              - Start Loop: ok
+                - process-loop: failed (Fail Message)
+                  - Loop finished after 1 iteration
             
             Summary:
               - Workflow execution: failed (Fail Message)
@@ -736,15 +756,16 @@ class LoopTest extends TestCase
             <<<DEBUG
             Process log for workflow 'test':
             Process:
-              - process-test: ok
-                - Process entry a
-              - Loop iteration #1: ok
-              - Loop iteration #2: failed (Fail Message) (1 warning)
-              - process-test: ok
-                - Process entry c
-              - Loop iteration #3: ok
-              - process-loop: ok
-                - Loop finished after 3 iterations
+              - Start Loop: ok
+                - process-test: ok
+                  - Process entry a
+                - Loop iteration #1: ok
+                - Loop iteration #2: failed (Fail Message) (1 warning)
+                - process-test: ok
+                  - Process entry c
+                - Loop iteration #3: ok
+                - process-loop: ok
+                  - Loop finished after 3 iterations
             
             Summary:
               - Workflow execution: ok
@@ -773,34 +794,5 @@ class LoopTest extends TestCase
             }],
             'By failing step' => [fn (WorkflowControl $control) => $control->failStep('Fail Message')],
         ];
-    }
-
-    private function entryLoopControl(): LoopControl
-    {
-        return $this->setupLoop(
-            'process-loop',
-            function (WorkflowControl $control, WorkflowContainer $container): bool {
-                $entries = $container->get('entries');
-
-                if (empty($entries)) {
-                    return false;
-                }
-
-                $container->set('entry', array_shift($entries));
-                $container->set('entries', $entries);
-
-                return true;
-            },
-        );
-    }
-
-    private function processEntry(): WorkflowStep
-    {
-        return $this->setupStep(
-            'process-test',
-            function (WorkflowControl $control, WorkflowContainer $container) {
-                $control->attachStepInfo("Process entry " . $container->get('entry'));
-            },
-        );
     }
 }

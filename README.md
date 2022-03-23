@@ -514,7 +514,7 @@ Summary:
 In this example the **AcceptOpenSuggestionForSong** step found a matching open suggestion and successfully accepted the suggestion.
 Consequently, the further workflow execution is skipped.
 
-### Custom-output-formatter
+### Custom output formatter
 
 The output of the `debug` method can be controlled via an implementation of the `OutputFormat` interface.
 By default a string representation of the execution will be returned (just like the example outputs).
@@ -527,7 +527,7 @@ Currently the following additional formatters are implemented:
 | `WorkflowGraph` | Creates a SVG file containing a graph which represents the workflow execution. The generated image will be stored in the provided target directory. Requires `dot` executable.<br />Example:<br />`$result->debug(new WorkflowGraph('/var/log/workflow/graph'));` |
 | `GraphViz`      | Returns a string containing [GraphViz](https://graphviz.org/) code for a graph representing the workflow execution.  <br />Example:<br />`$result->debug(new GraphViz());`|
 
-## Tests ##
+## Tests
 
 The library is tested via [PHPUnit](https://phpunit.de/).
 

@@ -22,6 +22,8 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 * [Workflow control](#Workflow-control)
 * [Nested workflows](#Nested-workflows)
 * [Loops](#Loops)
+* [Step dependencies](#Step-dependencies)
+  * [Required container values](#Required-container-values)
 * [Error handling, logging and debugging](#Error-handling-logging-and-debugging)
   * [Custom output formatter](#Custom-output-formatter)
 * [Tests](#Tests)
@@ -425,6 +427,40 @@ If you enable this option a failed step will not result in a failed workflow.
 Instead, a warning will be added to the process log.
 Calls to `failWorkflow` and `skipWorkflow` will always cancel the loop (and consequently the workflow) independent of the option.
 
+## Step dependencies
+
+Each step implementation may apply dependencies to the step.
+By defining dependencies you can set up validation rules which are checked before your step is executed (for example: which data nust be provided in the workflow  container).
+If any of the dependencies is not fulfilled the step will not be executed and is handled as a failed step.
+
+Note: as this feature uses [Attributes](https://www.php.net/manual/de/language.attributes.overview.php), it is only available if you use PHP >= 8.0.
+
+### Required container values
+
+With the `\PHPWorkflow\Step\Dependency\Required` attribute you can define keys which must be present in the provided workflow container.
+The keys consequently must be provided in the initial workflow or be populated by a previous step.
+Additionally to the key you can also provide the type of the value (eg. `string`).
+
+To define the dependency you simply annotate the provided workflow container parameter:
+
+```php
+public function run(
+    \PHPWorkflow\WorkflowControl $control,
+    // The key customerId must contain a string
+    #[\PHPWorkflow\Step\Dependency\Required('customerId', 'string')]
+    // The customerAge must contain an integer. But also null is accepted.
+    // Each type definition can be prefixed with a ? to accept null.
+    #[\PHPWorkflow\Step\Dependency\Required('customerAge', '?int')]
+    // Objects can also be type hinted
+    #[\PHPWorkflow\Step\Dependency\Required('created', \DateTime::class)]
+    \PHPWorkflow\State\WorkflowContainer $container,
+) {
+    // Implementation which can rely on the defined keys to be present in the container.
+}
+```
+
+The following types are supported: `string`, `bool`, `int`, `float`, `object`, `array`, `iterable`, `scalar` as well as object type hints by providing the corresponding FQCN
+
 ## Error handling, logging and debugging
 
 The **executeWorkflow** method returns an **WorkflowResult** object which provides the following methods to determine the result of the workflow:
@@ -521,11 +557,11 @@ By default a string representation of the execution will be returned (just like 
 
 Currently the following additional formatters are implemented:
 
-| Formatter       | Description   |
-| --------------- | ------------- |
-| `StringLog`     | The default formatter. Creates a string representation. <br />Example:<br />`$result->debug();` |
-| `WorkflowGraph` | Creates a SVG file containing a graph which represents the workflow execution. The generated image will be stored in the provided target directory. Requires `dot` executable.<br />Example:<br />`$result->debug(new WorkflowGraph('/var/log/workflow/graph'));` |
-| `GraphViz`      | Returns a string containing [GraphViz](https://graphviz.org/) code for a graph representing the workflow execution.  <br />Example:<br />`$result->debug(new GraphViz());`|
+`, ` Formatter       `, ` Description   `, `
+`, ` --------------- `, ` ------------- `, `
+`, ` `StringLog`     `, ` The default formatter. Creates a string representation. <br />Example:<br />`$result->debug();` `, `
+`, ` `WorkflowGraph` `, ` Creates a SVG file containing a graph which represents the workflow execution. The generated image will be stored in the provided target directory. Requires `dot` executable.<br />Example:<br />`$result->debug(new WorkflowGraph('/var/log/workflow/graph'));` `, `
+`, ` `GraphViz`      `, ` Returns a string containing [GraphViz](https://graphviz.org/) code for a graph representing the workflow execution.  <br />Example:<br />`$result->debug(new GraphViz());``, `
 
 ## Tests
 

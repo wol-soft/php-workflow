@@ -9,6 +9,7 @@ use PHPWorkflow\Exception\WorkflowControl\FailStepException;
 use PHPWorkflow\Exception\WorkflowControl\LoopControlException;
 use PHPWorkflow\Exception\WorkflowControl\SkipStepException;
 use PHPWorkflow\Exception\WorkflowControl\SkipWorkflowException;
+use PHPWorkflow\Middleware\WorkflowStepDependencyCheck;
 use PHPWorkflow\State\ExecutionLog\ExecutionLog;
 use PHPWorkflow\State\WorkflowState;
 
@@ -65,11 +66,18 @@ trait StepExecutionTrait
     {
         $tip = fn () => $step->run($workflowState->getWorkflowControl(), $workflowState->getWorkflowContainer());
 
-        foreach ($workflowState->getMiddlewares() as $middleware) {
+        $middlewares = $workflowState->getMiddlewares();
+
+        if (PHP_MAJOR_VERSION >= 8) {
+            array_unshift($middlewares, new WorkflowStepDependencyCheck());
+        }
+
+        foreach ($middlewares as $middleware) {
             $tip = fn () => $middleware(
                 $tip,
                 $workflowState->getWorkflowControl(),
                 $workflowState->getWorkflowContainer(),
+                $step,
             );
         }
 

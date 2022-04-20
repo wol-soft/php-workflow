@@ -18,4 +18,15 @@ class WorkflowContainer
         $this->items[$key] = $value;
         return $this;
     }
+
+    public function unset(string $key): self
+    {
+        $this->unset($this->items[$key]);
+        return $this;
+    }
+
+    public function has(string $key): bool
+    {
+        return array_key_exists($key, $this->items);
+    }
 }

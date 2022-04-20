@@ -259,7 +259,7 @@ class StepDependencyTest extends TestCase
                 (new WorkflowContainer())->set('created', $input),
                 "Value for 'created' has an invalid type. Expected DateTime, got "
                     . gettype($input)
-                    . (is_object($input) ? sprintf(' (%s)', $input::class) : ''),
+                    . (is_object($input) ? sprintf(' (%s)', get_class($input)) : ''),
             ];
         }
 
@@ -268,7 +268,7 @@ class StepDependencyTest extends TestCase
                 (new WorkflowContainer())->set('created', new DateTime())->set('updated', $input),
                 "Value for 'updated' has an invalid type. Expected ?DateTime, got "
                     . gettype($input)
-                    . (is_object($input) ? sprintf(' (%s)', $input::class) : ''),
+                    . (is_object($input) ? sprintf(' (%s)', get_class($input)) : ''),
             ];
         }
     }

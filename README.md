@@ -18,6 +18,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 
 * [Installation](#Installation)
 * [Example workflow](#Example-workflow)
+* [Workflow container](#Workflow-container)
 * [Stages](#Stages)
 * [Workflow control](#Workflow-control)
 * [Nested workflows](#Nested-workflows)
@@ -31,6 +32,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 ## Installation
 
 The recommended way to install php-workflow is through [Composer](http://getcomposer.org):
+
 ```
 $ composer require wol-soft/php-workflow
 ```
@@ -157,6 +159,8 @@ class AcceptOpenSuggestionForSong implements \PHPWorkflow\Step\WorkflowStep {
 }
 ```
 
+## Workflow container
+
 Now let's have a more detailed look at the **WorkflowContainer** which helps us, to share data and objects between our workflow steps.
 The relevant objects for our example workflow is the **User** who wants to add the song, the **Song** object of the song to add and the **Playlist** object.
 Before we execute our workflow we can set up a **WorkflowContainer** which contains all relevant objects:
@@ -167,6 +171,22 @@ $workflowContainer = (new \PHPWorkflow\State\WorkflowContainer())
     ->set('song', (new SongRepository())->getSongById($request->get('songId')))
     ->set('playlist', (new PlaylistRepository())->getPlaylistById($request->get('playlistId')));
 ```
+
+The workflow container provides the following interface:
+
+```php
+// returns an item or null if the key doesn't exist
+public function get(string $key)
+// set or update a value
+public function set(string $key, $value): self
+// remove an entry
+public function unset(string $key): self
+// check if a key exists
+public function has(string $key): bool
+```
+
+Each workflow step may define requirements, which entries must be present in the workflow container before the step is executed.
+For more details have a look at [Required container values](#Required-container-values).
 
 Alternatively to set and get the values from the **WorkflowContainer** via string keys you can extend the **WorkflowContainer** and add typed properties/functions to handle values in a type-safe manner:
 
@@ -194,7 +214,7 @@ $workflowResult = (new \PHPWorkflow\Workflow('AddSongToPlaylist'))
     ->executeWorkflow($workflowContainer);
 ```
 
-Another possibility would be to define a step in the **Prepare** stage (e.g. **PopulateAddSongToPlaylistContainer**) which populates the injected **WorkflowContainer** object.
+Another possibility would be to define a step in the **Prepare** stage (e.g. **PopulateAddSongToPlaylistContainer**) which populates the automatically injected empty **WorkflowContainer** object.
 
 ## Stages
 
@@ -557,11 +577,11 @@ By default a string representation of the execution will be returned (just like 
 
 Currently the following additional formatters are implemented:
 
-`, ` Formatter       `, ` Description   `, `
-`, ` --------------- `, ` ------------- `, `
-`, ` `StringLog`     `, ` The default formatter. Creates a string representation. <br />Example:<br />`$result->debug();` `, `
-`, ` `WorkflowGraph` `, ` Creates a SVG file containing a graph which represents the workflow execution. The generated image will be stored in the provided target directory. Requires `dot` executable.<br />Example:<br />`$result->debug(new WorkflowGraph('/var/log/workflow/graph'));` `, `
-`, ` `GraphViz`      `, ` Returns a string containing [GraphViz](https://graphviz.org/) code for a graph representing the workflow execution.  <br />Example:<br />`$result->debug(new GraphViz());``, `
+| Formatter       | Description   |
+| --------------- | ------------- |
+| `StringLog`     | The default formatter. Creates a string representation. <br />Example:<br />`$result->debug();` |
+| `WorkflowGraph` | Creates a SVG file containing a graph which represents the workflow execution. The generated image will be stored in the provided target directory. Requires `dot` executable.<br />Example:<br />`$result->debug(new WorkflowGraph('/var/log/workflow/graph'));` |
+| `GraphViz`      | Returns a string containing [GraphViz](https://graphviz.org/) code for a graph representing the workflow execution.  <br />Example:<br />`$result->debug(new GraphViz());`|
 
 ## Tests
 

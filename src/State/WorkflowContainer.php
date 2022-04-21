@@ -21,7 +21,7 @@ class WorkflowContainer
 
     public function unset(string $key): self
     {
-        $this->unset($this->items[$key]);
+        unset($this->items[$key]);
         return $this;
     }
 

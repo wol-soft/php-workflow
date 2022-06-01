@@ -450,8 +450,8 @@ Calls to `failWorkflow` and `skipWorkflow` will always cancel the loop (and cons
 ## Step dependencies
 
 Each step implementation may apply dependencies to the step.
-By defining dependencies you can set up validation rules which are checked before your step is executed (for example: which data nust be provided in the workflow  container).
-If any of the dependencies is not fulfilled the step will not be executed and is handled as a failed step.
+By defining dependencies you can set up validation rules which are checked before your step is executed (for example: which data must be provided in the workflow  container).
+If any of the dependencies is not fulfilled, the step will not be executed and is handled as a failed step.
 
 Note: as this feature uses [Attributes](https://www.php.net/manual/de/language.attributes.overview.php), it is only available if you use PHP >= 8.0.
 
@@ -479,7 +479,7 @@ public function run(
 }
 ```
 
-The following types are supported: `string`, `bool`, `int`, `float`, `object`, `array`, `iterable`, `scalar` as well as object type hints by providing the corresponding FQCN
+The following types are supported: `string`, `bool`, `int`, `float`, `object`, `array`, `iterable`, `scalar` as well as object type hints by providing the corresponding FQCN.
 
 ## Error handling, logging and debugging
 

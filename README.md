@@ -16,6 +16,7 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 
 ## Table of Contents ##
 
+* [Workflow vs. process](#Workflow-vs-process)
 * [Installation](#Installation)
 * [Example workflow](#Example-workflow)
 * [Workflow container](#Workflow-container)
@@ -28,6 +29,26 @@ Bonus: you will get an execution log for each executed workflow - if you want to
 * [Error handling, logging and debugging](#Error-handling-logging-and-debugging)
   * [Custom output formatter](#Custom-output-formatter)
 * [Tests](#Tests)
+* [Workshop](#Workshop)
+
+## Workflow vs. process
+
+Before we start to look at coding with the library let's have a look, what a workflow implemented with this library can and what a workflow can't.
+
+Let's assume we want to sell an item via an online shop.
+If a customer purchases an item he walks through the process of purchasing an item.
+This process contains multiple steps.
+Each process step can be represented by a workflow implemented with this library. For example:
+
+* Customer registration
+* Add items to the basket
+* Checkout the basket
+* ...
+
+This library helps you to implement the process steps in a structured way.
+It doesn't control the process flow.
+
+Now we know which use cases this library aims at. Now let's install the library and start coding.
 
 ## Installation
 
@@ -603,3 +624,37 @@ protected function expectFailAtStep(string $step, WorkflowResult $result): void
 // example: $this->expectSkipAtStep(MySkippingStep::class, $workflowResult);
 protected function expectSkipAtStep(string $step, WorkflowResult $result): void
 ```
+
+## Workshop
+
+Maybe you want to try out the library and lack a simple idea to solve with the library.
+Therefore, here's a small workshop which covers most of the library's features.
+Implement the task given below (which, to be fair, can surely be implemented easier without the library but the library is designed to support large workflows with a lot of business logic) to have an idea how coding with the library works.
+
+Your data input for this task is a simple array with a list of persons in the following format:
+
+```php
+[
+    'firstname' => string,
+    'lastname' => string,
+    'age' => int,
+]
+```
+
+The workflow shall implement the following steps:
+
+1. Check if the list is empty. In this case finish the workflow directly
+2. Check if the list contains persons with an age below 18 years. In this case the workflow should fail
+3. Make sure each firstname and lastname is populated. If any empty fields are detected, the workflow should fail
+4. Before processing the list normalize the firstnames and lastnames (`ucfirst` and `trim`)
+   - Make sure the workflow log contains the amount of changed data sets
+5. Process the list. The processing itself splits up into the following steps:
+   1. Make sure a directory of your choice contains a CSV file for each age from the input data
+      - If the file doesn't exist, create a new file
+      - The workflow log must contain information about new files
+   2. Add all persons from your input data to the corresponding files
+      - The workflow log must display the amount of persons added to each file
+6. If all persons were persisted successfully create a ZIP backup of all files
+7. If an error occurred rollback to the last existing ZIP backup
+
+If you have finished implementing the workflow, pick a step of your choice and implement a unit test for the step.

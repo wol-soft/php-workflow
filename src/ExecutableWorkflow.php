@@ -12,7 +12,7 @@ interface ExecutableWorkflow
      * @throws WorkflowException
      */
     public function executeWorkflow(
-        WorkflowContainer $workflowContainer = null,
+        ?WorkflowContainer $workflowContainer = null,
         bool $throwOnFailure = true
     ): WorkflowResult;
 }
